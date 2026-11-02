@@ -11,15 +11,32 @@
 :root{--teal:#0f766e;--teal2:#14b8a6;--bg:#f0fdfa;--card:#fff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--ok:#16a34a;--bad:#dc2626}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
-header{position:sticky;top:0;z-index:10;background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 0;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+header{position:sticky;top:0;z-index:10;background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .top{display:flex;align-items:center;justify-content:space-between;max-width:980px;margin:0 auto}
 .brand{font-weight:800;font-size:20px;letter-spacing:-.01em}
 .status{font-size:12px;opacity:.95;display:flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:#fbbf24}.dot.on{background:#4ade80}.dot.err{background:#f87171}
-nav{display:flex;gap:2px;max-width:980px;margin:6px auto 0}
-nav button{flex:1;background:transparent;border:0;color:#ccfbf1;padding:10px 4px;font-size:15px;font-weight:600;border-bottom:3px solid transparent;cursor:pointer}
-nav button.act{color:#fff;border-bottom-color:#5eead4}
-main{max-width:980px;margin:0 auto;padding:14px 12px 70px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(15,23,42,.06);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+.tabbar-in{max-width:600px;margin:0 auto;display:flex}
+.tabbar button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--mut);padding:4px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tabbar button .ic{font-size:22px;line-height:1;filter:grayscale(1);opacity:.6}
+.tabbar button.act{color:var(--teal)}.tabbar button.act .ic{filter:none;opacity:1}
+main{max-width:980px;margin:0 auto;padding:14px 12px calc(96px + env(safe-area-inset-bottom))}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:60;background:#0f172a;color:#fff;padding:11px 12px 11px 16px;border-radius:14px;display:flex;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);width:max-content;max-width:92vw;font-size:14px;font-weight:600}
+.toast button{background:var(--teal2);color:#fff;border:0;border-radius:9px;padding:8px 12px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.lk.lbig{display:block;text-align:center;padding:13px 8px;font-size:15px;border-radius:11px}
+details.more summary{cursor:pointer;color:var(--teal);font-weight:700;font-size:14px;padding:8px 0;list-style:none;-webkit-tap-highlight-color:transparent}
+details.more summary::-webkit-details-marker{display:none}
+.steps{display:grid;gap:10px}
+.step{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.4}
+.step .n{flex:0 0 24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.howto{background:#ecfeff;border:1px solid #a5f3fc}
+.xbtn{background:none;border:0;font-size:22px;line-height:1;color:var(--mut);cursor:pointer;padding:0 4px}
+.route{font-size:21px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.plist .pi{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.plist .pi:last-child{border-bottom:0}
+.plist a{color:var(--teal);font-weight:600;text-decoration:none}
 .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(15,23,42,.08);margin-bottom:12px}
 label.f{display:block;font-size:11px;font-weight:700;color:var(--mut);margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em}
 input,select,textarea{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
@@ -86,7 +103,7 @@ h2{font-size:18px;margin:0 0 10px}h3{font-size:15px;margin:0 0 8px}
 .chk input{width:auto}
 pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-size:12px;overflow-x:auto}
 .ver{font-size:12px;color:var(--mut);text-align:center;margin-top:20px}
-@media(max-width:520px){.grid3{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:520px){.grid3{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr 1fr}main{padding-left:10px;padding-right:10px}.card{padding:13px 12px;border-radius:13px}.combos{grid-template-columns:1fr}.brand{font-size:18px}h2{font-size:17px}.stat b{font-size:15px}.btn{padding:11px 14px}}
 </style>
 </head>
 <body>
@@ -98,7 +115,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -300,7 +317,17 @@ function AirportPicker({ value, onChange, placeholder }) {
   );
 }
 
-function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew }) {
+function HowSteps() {
+  return (
+    <div className="steps">
+      <div className="step"><span className="n">1</span><span>Tocca un sito (<b>Google Flights</b>, <b>Skyscanner</b>…): si apre già con tratta e date compilate.</span></div>
+      <div className="step"><span className="n">2</span><span>Trova il volo che ti interessa e guarda il prezzo.</span></div>
+      <div className="step"><span className="n">3</span><span>Torna qui e premi <b>+ Registra prezzo</b>: lo ritrovi in <b>Viaggi</b> con grafico e storico, così vedi se sale o scende.</span></div>
+    </div>
+  );
+}
+
+function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onOpenTrip }) {
   const s = search; const up = p => setSearch({ ...s, ...p });
   const ret = s.tipo === 'ar' ? s.ritorno : '';
   const hasDates = s.andata && (s.tipo === 'oa' || s.ritorno);
@@ -318,8 +345,31 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew }) {
     return list.sort((a, b) => (a.last ? a.last.pp : 1e9) - (b.last ? b.last.pp : 1e9));
   }, [s, data.prezzi]);
 
+  const [editing, setEditing] = useState(!valid);
+  useEffect(() => { setEditing(!(s.tripId && valid)); }, [s.tripId]);
+  const [howHidden, setHowHidden] = useState(() => { try { return localStorage.getItem('voli_how') === '1'; } catch (e) { return false; } });
+  const hideHow = () => { setHowHidden(true); try { localStorage.setItem('voli_how', '1'); } catch (e) {} };
+
   return (
     <div>
+      {valid && !editing ? (
+        <div className="card">
+          <div className="row" style={{ alignItems: 'flex-start' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              {trip && <div className="mut small b">{trip.nome}</div>}
+              <div className="route">{s.origini.join(' / ')} → {s.ovunque ? 'Ovunque' : s.destinazioni.join(' / ')}</div>
+              <div className="mut small" style={{ marginTop: 3 }}>{fmtD(s.andata)}{ret ? ' → ' + fmtD(ret) : ' · solo andata'} · {s.adulti} {s.adulti > 1 ? 'adulti' : 'adulto'}</div>
+            </div>
+            <button className="btn ghost small" onClick={() => setEditing(true)}>✎ Modifica</button>
+          </div>
+          <div className="row mt">
+            {trip ? <button className="btn sec small" onClick={() => onOpenTrip(trip.id)}>📈 Storico prezzi</button>
+              : <button className="btn small" onClick={onSaveTrip}>💾 Salva viaggio</button>}
+            <div className="sp" />
+            <button className="btn ghost small" onClick={onNew}>+ Nuova ricerca</button>
+          </div>
+        </div>
+      ) : (
       <div className="card">
         <div className="row" style={{ marginBottom: 10 }}>
           <h2 style={{ margin: 0 }}>{trip ? '✈ ' + trip.nome : 'Nuova ricerca'}</h2>
@@ -365,10 +415,20 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew }) {
           <button className="btn" disabled={!s.origini.length || (!s.ovunque && !s.destinazioni.length)} onClick={onSaveTrip}>{trip ? '💾 Aggiorna viaggio' : '💾 Salva viaggio'}</button>
           <span className="mut small">Salvi la ricerca e lo storico dei prezzi su Firebase</span>
         </div>
+        {valid && <button className="btn full mt" style={{ background: '#0f172a' }} onClick={() => { setEditing(false); window.scrollTo(0, 0); }}>✈ Mostra i voli</button>}
       </div>
+      )}
+
+      {valid && !howHidden && (
+        <div className="card howto">
+          <div className="row" style={{ marginBottom: 8 }}><b>Come funziona</b><div className="sp" /><button className="xbtn" onClick={hideHow} aria-label="Chiudi">×</button></div>
+          <HowSteps />
+          <div className="mut small" style={{ marginTop: 10 }}>L'app non legge i prezzi da sola: le compagnie non offrono dati gratuiti. Tu controlli i siti, l'app tiene lo storico.</div>
+        </div>
+      )}
 
       {!valid ? (
-        <div className="card empty">Inserisci partenza, destinazione e date per generare i link di ricerca.</div>
+        <div className="card empty">Inserisci partenza, destinazione e date: qui sotto compariranno i siti da controllare per ogni tratta.</div>
       ) : s.ovunque ? (
         <div className="combos">
           {s.origini.map(o => (
@@ -395,8 +455,11 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew }) {
                   <div><b style={{ fontSize: 17 }}>{c.o} → {c.d}</b><div className="mut small">{apName(c.o)} → {apName(c.d)}</div></div>
                   <div>{c.last ? <><div className="price">{eur(c.last.pp)}</div><div className="mut small" style={{ textAlign: 'right' }}>a pers.{c.prev ? ' · ' : ''}<Trend last={c.last} prev={c.prev} /></div><div className="mut small" style={{ textAlign: 'right' }}>min {eur(c.min)} · {c.ps.length} rilev.</div></> : <span className="badge b-mut">nessun prezzo</span>}</div>
                 </div>
-                <div className="links">{buildLinks(s, c.o, c.d).map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div>
-                <button className="btn sec small full" onClick={() => onRegister({ origine: c.o, destinazione: c.d, andata: s.andata, ritorno: ret, adulti: s.adulti })}>+ Registra prezzo trovato</button>
+                {(() => { const L = buildLinks(s, c.o, c.d); const main = L.filter(l => l.k === 'gf' || l.k === 'sky'); const rest = L.filter(l => l.k !== 'gf' && l.k !== 'sky'); return <>
+                  <div className="lgrid">{main.map(l => <a key={l.k} className={'lk lbig ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}</div>
+                  <details className="more"><summary>Altri siti e compagnie ▾</summary><div className="links" style={{ marginTop: 4 }}>{rest.map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div></details>
+                </>; })()}
+                <button className="btn full" style={{ marginTop: 6 }} onClick={() => onRegister({ origine: c.o, destinazione: c.d, andata: s.andata, ritorno: ret, adulti: s.adulti })}>+ Registra prezzo trovato</button>
               </div>
             ))}
           </div>
@@ -485,7 +548,7 @@ function PriceChart({ ps, target }) {
   );
 }
 
-function TripsTab({ data, onOpen }) {
+function TripsTab({ data, onOpen, onSearch, onRegister }) {
   const [arch, setArch] = useState(false);
   const prezzi = Object.values(data.prezzi || {});
   const trips = Object.values(data.viaggi || {}).filter(t => !!t.archiviato === arch).sort((a, b) => (a.andata || '9').localeCompare(b.andata || '9'));
@@ -508,10 +571,20 @@ function TripsTab({ data, onOpen }) {
               {dd != null && dd >= 0 && <span className="badge b-teal">tra {dd} gg</span>}
             </div>
             <div className="mut small" style={{ marginTop: 4 }}>{t.origini.join(' / ')} → {t.ovunque ? 'Ovunque' : t.destinazioni.join(' / ')} · {fmtD(t.andata)}{t.ritorno ? ' – ' + fmtD(t.ritorno) : ''} · {t.adulti} pax</div>
+            {st.ps.length === 0 ? (
+              <div className="mut small" style={{ marginTop: 10, lineHeight: 1.4 }}>Nessun prezzo registrato. Tocca <b>Cerca voli</b>, controlla i siti e registra il prezzo che trovi.</div>
+            ) : (
             <div className="stats">
               <div className="stat"><span>Migliore ora</span><b>{st.best ? eur(st.best.last.pp) : '—'}</b>{st.best && <span style={{ textTransform: 'none' }}>{st.best.last.origine}→{st.best.last.destinazione} <Trend last={st.best.last} prev={st.best.prev} /></span>}</div>
               <div className="stat"><span>Minimo visto</span><b>{eur(st.minEver)}</b></div>
               <div className="stat"><span>Rilevazioni</span><b>{st.ps.length}</b>{st.ps.length > 0 && <span style={{ textTransform: 'none' }}>ult. {fmtTs(st.ps[st.ps.length - 1].ts)}</span>}</div>
+            </div>
+            )}
+            <div className="row mt" onClick={e => e.stopPropagation()}>
+              <button className="btn small" onClick={() => onSearch(t)}>🔎 Cerca voli</button>
+              <button className="btn sec small" onClick={() => onRegister(t)}>+ Prezzo</button>
+              <div className="sp" />
+              <button className="btn ghost small" onClick={() => onOpen(t.id)}>Storico ›</button>
             </div>
           </div>
         );
@@ -538,33 +611,69 @@ function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRe
           {dd != null && dd >= 0 && <span className="badge b-teal">tra {dd} gg</span>}
         </div>
         <div className="mut small" style={{ marginTop: 4 }}>{trip.origini.join(' / ')} → {trip.ovunque ? 'Ovunque' : trip.destinazioni.join(' / ')} · {fmtD(trip.andata)}{trip.ritorno ? ' – ' + fmtD(trip.ritorno) : ' (solo andata)'} · {trip.adulti} pax</div>
-        <div className="row mt">
-          <button className="btn" onClick={onOpenSearch}>🔎 Apri ricerca</button>
-          <button className="btn sec" onClick={() => onRegister()}>+ Prezzo</button>
-          <div className="sp" />
+        <div className="grid2 mt">
+          <button className="btn" onClick={onOpenSearch}>🔎 Cerca voli</button>
+          <button className="btn sec" onClick={() => onRegister()}>+ Registra prezzo</button>
+        </div>
+        <div className="row" style={{ marginTop: 8, justifyContent: 'flex-end' }}>
           <button className="btn ghost small" onClick={() => saveField({ archiviato: !trip.archiviato })}>{trip.archiviato ? 'Ripristina' : 'Archivia'}</button>
           <button className="btn danger small" onClick={onDelete}>Elimina</button>
         </div>
       </div>
 
+      {!st.ps.length ? (
+        <div className="card howto">
+          <h3>Nessun prezzo ancora</h3>
+          <HowSteps />
+          <button className="btn full mt" onClick={onOpenSearch}>🔎 Cerca voli per questo viaggio</button>
+        </div>
+      ) : (
+      <>
       <div className="card">
         <h3>Andamento prezzi (a persona)</h3>
         <PriceChart ps={st.ps} target={trip.target ? Number(trip.target) : null} />
       </div>
 
-      {st.groups.length > 0 && (
-        <div className="card">
-          <h3>Riepilogo per tratta</h3>
-          <div className="tblwrap"><table>
-            <thead><tr><th>Tratta</th><th className="num">Ultimo</th><th className="num">Min</th><th className="num">Max</th><th className="num">N.</th></tr></thead>
-            <tbody>{st.groups.map(g => (
-              <tr key={g.k}>
-                <td><b>{g.last.origine}→{g.last.destinazione}</b><div className="mut small">{fmtDs(g.last.andata)}{g.last.ritorno ? '–' + fmtDs(g.last.ritorno) : ''}</div></td>
-                <td className="num"><b>{eur(g.last.pp)}</b><div><Trend last={g.last} prev={g.prev} /></div></td>
-                <td className="num">{eur(g.min)}</td><td className="num">{eur(g.max)}</td><td className="num">{g.n}</td>
-              </tr>))}</tbody>
-          </table></div>
+      <div className="card">
+        <h3>Riepilogo per tratta</h3>
+        <div className="plist">{st.groups.map(g => (
+          <div key={g.k} className="pi">
+            <div style={{ minWidth: 0 }}>
+              <b>{g.last.origine} → {g.last.destinazione}</b>
+              <div className="mut small">{fmtDs(g.last.andata)}{g.last.ritorno ? '–' + fmtDs(g.last.ritorno) : ''} · {g.n} rilev.</div>
+              <div className="mut small">min {eur(g.min)} · max {eur(g.max)}</div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div className="price" style={{ fontSize: 19 }}>{eur(g.last.pp)}</div>
+              <Trend last={g.last} prev={g.prev} />
+            </div>
+          </div>))}
         </div>
+      </div>
+
+      <div className="card">
+        <h3>Storico rilevazioni</h3>
+        <div className="plist">{st.ps.slice().reverse().map(p => (
+          <div key={p.id} className="pi">
+            <div style={{ minWidth: 0 }}>
+              <b>{p.origine} → {p.destinazione}</b> <span className="mut small">{fmtDs(p.andata)}{p.ritorno ? '–' + fmtDs(p.ritorno) : ''}</span>
+              <div className="mut small">{fmtTs(p.ts)} · {p.fonte}{p.compagnia ? ' · ' + p.compagnia : ''}</div>
+              {[p.scali, p.bagaglio, p.orari].filter(Boolean).length > 0 && <div className="mut small">{[p.scali, p.bagaglio, p.orari].filter(Boolean).join(' · ')}</div>}
+              {p.note && <div className="mut small">{p.note}</div>}
+              {p.link && <a className="small" href={p.link} target="_blank" rel="noopener">Apri offerta ↗</a>}
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div className="b" style={{ fontSize: 16 }}>{eur(p.pp)}</div>
+              <div className="mut small">tot {eur(p.tot)}</div>
+              <div style={{ marginTop: 6, display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                <button className="btn ghost small" onClick={() => onEditPrice(p)}>✎</button>
+                <button className="btn danger small" onClick={() => { if (confirm('Eliminare questa rilevazione?')) store.update({ [`prezzi/${p.id}`]: null }); }}>×</button>
+              </div>
+            </div>
+          </div>))}
+        </div>
+      </div>
+      </>
       )}
 
       <div className="card">
@@ -574,22 +683,6 @@ function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRe
         <div className="mt"><label className="f">Note</label><textarea rows="3" value={note} onChange={e => setNote(e.target.value)} onBlur={() => note !== (trip.note || '') && saveField({ note })} /></div>
       </div>
 
-      <div className="card">
-        <h3>Storico rilevazioni</h3>
-        {!st.ps.length ? <div className="empty">Ancora nessuna rilevazione.</div> : (
-          <div className="tblwrap"><table>
-            <thead><tr><th>Quando</th><th>Tratta</th><th className="num">€/pers.</th><th>Dettagli</th><th></th></tr></thead>
-            <tbody>{st.ps.slice().reverse().map(p => (
-              <tr key={p.id}>
-                <td className="small">{fmtTs(p.ts)}</td>
-                <td><b>{p.origine}→{p.destinazione}</b><div className="mut small">{fmtDs(p.andata)}{p.ritorno ? '–' + fmtDs(p.ritorno) : ''}</div></td>
-                <td className="num"><b>{eur(p.pp)}</b><div className="mut small">tot {eur(p.tot)}</div></td>
-                <td className="small">{p.fonte}{p.compagnia ? ' · ' + p.compagnia : ''}<div className="mut">{[p.scali, p.bagaglio, p.orari].filter(Boolean).join(' · ')}</div>{p.note && <div className="mut">{p.note}</div>}{p.link && <a href={p.link} target="_blank" rel="noopener">apri offerta</a>}</td>
-                <td className="num"><button className="btn ghost small" onClick={() => onEditPrice(p)}>✎</button> <button className="btn danger small" onClick={() => { if (confirm('Eliminare questa rilevazione?')) store.update({ [`prezzi/${p.id}`]: null }); }}>×</button></td>
-              </tr>))}</tbody>
-          </table></div>
-        )}
-      </div>
     </div>
   );
 }
@@ -645,6 +738,10 @@ function App() {
   const [search, setSearch] = useState(blankSearch());
   const [draft, setDraft] = useState(null);
   const [newVer, setNewVer] = useState(null);
+  const [toast, setToast] = useState(null);
+  const toastT = useRef(null);
+  const showToast = (msg, action) => { clearTimeout(toastT.current); setToast({ msg, action }); toastT.current = setTimeout(() => setToast(null), 5000); };
+  const goTrip = id => { setTab('viaggi'); setTripView(id); window.scrollTo(0, 0); };
   const initDone = useRef(false);
 
   useEffect(() => {
@@ -673,10 +770,12 @@ function App() {
     };
     store.update({ [`viaggi/${t.id}`]: t });
     setSearch(x => ({ ...x, tripId: t.id, nome: t.nome }));
+    showToast('Viaggio salvato', { label: 'Apri', fn: () => goTrip(t.id) });
     return t;
   };
   const register = d => { let tripId = search.tripId; if (!tripId || !data.viaggi[tripId]) tripId = saveTrip().id; setDraft({ ...d, tripId }); };
-  const savePrice = p => { store.update({ [`prezzi/${p.id}`]: p }); setDraft(null); };
+  const savePrice = p => { store.update({ [`prezzi/${p.id}`]: p }); setDraft(null); showToast(`Prezzo salvato: ${eur(p.pp)}`, { label: 'Vedi storico', fn: () => goTrip(p.tripId) }); };
+  const registerFor = t => setDraft({ tripId: t.id, origine: t.origini[0] || '', destinazione: t.destinazioni[0] || '', andata: t.andata, ritorno: t.ritorno, adulti: t.adulti });
   const openSearchFromTrip = t => {
     setSearch({ origini: t.origini || [], destinazioni: t.destinazioni || [], ovunque: !!t.ovunque, tipo: t.tipo || 'ar', andata: t.andata || '', ritorno: t.ritorno || '', adulti: t.adulti || 1, flex: t.flex || 0, tripId: t.id, nome: t.nome });
     setTab('cerca'); window.scrollTo(0, 0);
@@ -700,21 +799,22 @@ function App() {
           <div className="brand">✈ Voli</div>
           <div className="status"><span className={'dot ' + (st === 'online' ? 'on' : st.startsWith('errore') ? 'err' : '')} />{st}</div>
         </div>
-        <nav>
-          <button className={tab === 'cerca' ? 'act' : ''} onClick={() => setTab('cerca')}>Cerca</button>
-          <button className={tab === 'viaggi' ? 'act' : ''} onClick={() => { setTab('viaggi'); setTripView(null); }}>Viaggi{nActive ? ` (${nActive})` : ''}</button>
-          <button className={tab === 'imp' ? 'act' : ''} onClick={() => setTab('imp')}>Impostazioni</button>
-        </nav>
       </header>
       <main>
-        {tab === 'cerca' && <SearchTab search={search} setSearch={setSearch} data={data} onSaveTrip={saveTrip} onRegister={register} onNew={() => setSearch(blankSearch(data.impostazioni))} />}
-        {tab === 'viaggi' && !trip && <TripsTab data={data} onOpen={id => { setTripView(id); window.scrollTo(0, 0); }} />}
+        {tab === 'cerca' && <SearchTab search={search} setSearch={setSearch} data={data} onSaveTrip={saveTrip} onRegister={register} onNew={() => setSearch(blankSearch(data.impostazioni))} onOpenTrip={goTrip} />}
+        {tab === 'viaggi' && !trip && <TripsTab data={data} onOpen={goTrip} onSearch={openSearchFromTrip} onRegister={registerFor} />}
         {tab === 'viaggi' && trip && <TripDetail trip={trip} data={data} store={store} onBack={() => setTripView(null)} onOpenSearch={() => openSearchFromTrip(trip)}
           onEditPrice={p => setDraft(p)} onDelete={() => deleteTrip(trip)}
-          onRegister={() => setDraft({ tripId: trip.id, origine: trip.origini[0] || '', destinazione: trip.destinazioni[0] || '', andata: trip.andata, ritorno: trip.ritorno, adulti: trip.adulti })} />}
+          onRegister={() => registerFor(trip)} />}
         {tab === 'imp' && <SettingsTab data={data} store={store} onCheckUpdate={v => setNewVer(v)} />}
         <div className="ver">Voli v{APP_VERSION}</div>
       </main>
+      <nav className="tabbar"><div className="tabbar-in">
+        <button className={tab === 'cerca' ? 'act' : ''} onClick={() => { setTab('cerca'); window.scrollTo(0, 0); }}><span className="ic">🔎</span>Cerca</button>
+        <button className={tab === 'viaggi' ? 'act' : ''} onClick={() => { setTab('viaggi'); setTripView(null); window.scrollTo(0, 0); }}><span className="ic">🧳</span>Viaggi{nActive ? ` (${nActive})` : ''}</button>
+        <button className={tab === 'imp' ? 'act' : ''} onClick={() => { setTab('imp'); window.scrollTo(0, 0); }}><span className="ic">⚙️</span>Impostazioni</button>
+      </div></nav>
+      {toast && <div className="toast"><span>{toast.msg}</span>{toast.action && <button onClick={() => { toast.action.fn(); setToast(null); }}>{toast.action.label}</button>}</div>}
       {draft && <PriceModal draft={draft} onClose={() => setDraft(null)} onSave={savePrice} />}
       {newVer && (
         <div className="modal-bg pop">
