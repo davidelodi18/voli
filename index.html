@@ -37,6 +37,12 @@ details.more summary::-webkit-details-marker{display:none}
 .plist .pi{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
 .plist .pi:last-child{border-bottom:0}
 .plist a{color:var(--teal);font-weight:600;text-decoration:none}
+.flist{margin-top:4px}
+.fl{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.fl.ko{opacity:.55}
+.fl-r{text-align:right;flex-shrink:0}
+.fl .t{font-size:15px;font-weight:800}
+.scanhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:2px 0 2px}
 .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(15,23,42,.08);margin-bottom:12px}
 label.f{display:block;font-size:11px;font-weight:700;color:var(--mut);margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em}
 input,select,textarea{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
@@ -115,7 +121,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.2.0';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -229,7 +235,7 @@ const hardReload = v => location.replace(location.origin + location.pathname + '
 /* ============ STORE (Firebase o locale) ============ */
 const clean = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
 function useStore() {
-  const [data, setData] = useState({ viaggi: {}, prezzi: {}, impostazioni: {} });
+  const [data, setData] = useState({ viaggi: {}, prezzi: {}, impostazioni: {}, scan: {} });
   const [status, setStatus] = useState(FB_ON ? 'connessione…' : 'locale');
   const [ready, setReady] = useState(!FB_ON);
   const dbRef = useRef(null);
@@ -247,7 +253,7 @@ function useStore() {
       const r = db.ref(ROOT);
       const cb = r.on('value', snap => {
         const v = snap.val() || {};
-        setData({ viaggi: v.viaggi || {}, prezzi: v.prezzi || {}, impostazioni: v.impostazioni || {} });
+        setData({ viaggi: v.viaggi || {}, prezzi: v.prezzi || {}, impostazioni: v.impostazioni || {}, scan: v.scan || {} });
         setStatus('online'); setReady(true);
       }, err => setStatus('errore: ' + err.message));
       off = () => r.off('value', cb);
@@ -270,7 +276,7 @@ function useStore() {
     });
   };
   const replaceAll = (obj) => {
-    const v = { viaggi: obj.viaggi || {}, prezzi: obj.prezzi || {}, impostazioni: obj.impostazioni || {} };
+    const v = { viaggi: obj.viaggi || {}, prezzi: obj.prezzi || {}, impostazioni: obj.impostazioni || {}, scan: obj.scan || {} };
     if (FB_ON) return dbRef.current && dbRef.current.ref(ROOT).set(clean(v));
     setData(v); try { localStorage.setItem('voli_data', JSON.stringify(v)); } catch (e) {}
   };
@@ -324,6 +330,39 @@ function AirportPicker({ value, onChange, placeholder }) {
           {!sugg.length && <div onMouseDown={e => { e.preventDefault(); add(q); }}>Aggiungi codice <b>{q.toUpperCase()}</b></div>}
         </div>
       )}
+    </div>
+  );
+}
+
+const scanFor = (data, tripId, o, d, andata, ritorno) => {
+  const sc = data.scan && data.scan[tripId] && data.scan[tripId][`${o}-${d}`];
+  if (!sc || !sc.voli || (sc.andata || '') !== (andata || '') || (sc.ritorno || '') !== (ritorno || '')) return null;
+  return sc;
+};
+function FlightRow({ f }) {
+  return (
+    <div className={'fl' + (f.ok === false ? ' ko' : '')}>
+      <div style={{ minWidth: 0 }}>
+        <div><span className="t">{f.dep || '?'}–{f.arr || '?'}</span> <span className="mut small">{f.dur}</span></div>
+        <div className="small b">{f.airline || '—'}</div>
+        <div className="mut small">{f.stops === 0 ? 'Diretto' : `${f.stops} scal${f.stops > 1 ? 'i' : 'o'}`}{f.via ? ' · ' + f.via : ''}{f.change ? ' · cambio aeroporto' : ''}</div>
+      </div>
+      <div className="fl-r">
+        <div className="t" style={{ color: 'var(--teal)' }}>{eur(f.pp)}</div>
+        {f.ok === false && <span className="badge b-warn">scomodo</span>}
+      </div>
+    </div>
+  );
+}
+function ScanList({ sc, title }) {
+  if (!sc || !sc.voli || !sc.voli.length) return null;
+  const first = sc.voli.slice(0, 3), rest = sc.voli.slice(3);
+  return (
+    <div style={{ marginTop: 6 }}>
+      <div className="scanhead"><b className="small">{title || '✈ Voli trovati'}</b><span className="mut small">🤖 {fmtTs(sc.ts)}</span></div>
+      <div className="flist">{first.map((f, i) => <FlightRow key={i} f={f} />)}</div>
+      {rest.length > 0 && <details className="more"><summary>{rest.length === 1 ? 'Mostra un altro volo' : `Mostra altri ${rest.length} voli`} ▾</summary><div className="flist">{rest.map((f, i) => <FlightRow key={i} f={f} />)}</div></details>}
+      <div className="mut small" style={{ marginTop: 4 }}>Prezzi a persona andata e ritorno · orari del volo di andata{sc.sky && (sc.sky.cheap || sc.sky.best) ? ` · Skyscanner: più economico ${eur(sc.sky.cheap)}, migliore ${eur(sc.sky.best)}` : ''}</div>
     </div>
   );
 }
@@ -434,7 +473,7 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
         <div className="card howto">
           <div className="row" style={{ marginBottom: 8 }}><b>Come funziona</b><div className="sp" /><button className="xbtn" onClick={hideHow} aria-label="Chiudi">×</button></div>
           <HowSteps />
-          <div className="mut small" style={{ marginTop: 10 }}>L'app non legge i prezzi da sola: le compagnie non offrono dati gratuiti. Tu controlli i siti, l'app tiene lo storico.</div>
+          <div className="mut small" style={{ marginTop: 10 }}>🤖 Per i viaggi salvati, ogni sera alle 19:35 Claude legge Google Flights e Skyscanner dal tuo Chrome e registra prezzi e voli trovati in automatico. Puoi sempre aggiungere tu un prezzo.</div>
         </div>
       )}
 
@@ -466,6 +505,7 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
                   <div><b style={{ fontSize: 17 }}>{c.o} → {c.d}</b><div className="mut small">{apName(c.o)} → {apName(c.d)}</div><div className="small b" style={{ color: 'var(--teal)', marginTop: 3 }}>📅 {fmtDs(s.andata)}{ret ? ' ⇄ ' + fmtDs(ret) + ' · A/R' : ' · solo andata'}</div></div>
                   <div>{c.last ? <><div className="price">{eur(c.last.pp)}</div><div className="mut small" style={{ textAlign: 'right' }}>a pers.{c.prev ? ' · ' : ''}<Trend last={c.last} prev={c.prev} /></div><div className="mut small" style={{ textAlign: 'right' }}>min {eur(c.min)} · {c.ps.length} rilev.</div></> : <span className="badge b-mut">nessun prezzo</span>}</div>
                 </div>
+                {s.tripId && <ScanList sc={scanFor(data, s.tripId, c.o, c.d, s.andata, ret)} />}
                 {(() => { const L = buildLinks(s, c.o, c.d); const main = L.filter(l => l.k === 'gf' || l.k === 'sky'); const rest = L.filter(l => l.k !== 'gf' && l.k !== 'sky'); return <>
                   <div className="lgrid">{main.map(l => <a key={l.k} className={'lk lbig ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}</div>
                   <details className="more"><summary>Altri siti e compagnie ▾</summary><div className="links" style={{ marginTop: 4 }}>{rest.map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div></details>
@@ -662,6 +702,18 @@ function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRe
         </div>
       </div>
 
+      {(() => {
+        const combos = (trip.origini || []).flatMap(o => (trip.destinazioni || []).filter(d => d !== o).map(d => ({ o, d, sc: scanFor(data, trip.id, o, d, trip.andata, trip.ritorno) }))).filter(x => x.sc);
+        if (!combos.length) return null;
+        combos.sort((a, b) => (a.sc.voli[0] ? a.sc.voli[0].pp : 1e9) - (b.sc.voli[0] ? b.sc.voli[0].pp : 1e9));
+        return (
+          <div className="card">
+            <h3>Voli trovati</h3>
+            {combos.map(x => <div key={x.o + x.d} style={{ marginBottom: 14 }}><ScanList sc={x.sc} title={`${x.o} → ${x.d} · ${apName(x.o)}`} /></div>)}
+          </div>
+        );
+      })()}
+
       <div className="card">
         <h3>Storico rilevazioni</h3>
         <div className="plist">{st.ps.slice().reverse().map(p => (
@@ -703,7 +755,7 @@ function SettingsTab({ data, store, onCheckUpdate }) {
   const [checking, setChecking] = useState(false); const [msg, setMsg] = useState('');
   const fileRef = useRef(null);
   const exportJson = () => {
-    const blob = new Blob([JSON.stringify({ viaggi: data.viaggi, prezzi: data.prezzi, impostazioni: data.impostazioni }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ viaggi: data.viaggi, prezzi: data.prezzi, impostazioni: data.impostazioni, scan: data.scan }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `voli-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click();
   };
   const importJson = e => {
