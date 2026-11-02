@@ -121,7 +121,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -337,7 +337,8 @@ function AirportPicker({ value, onChange, placeholder }) {
 const scanFor = (data, tripId, o, d, andata, ritorno) => {
   const sc = data.scan && data.scan[tripId] && data.scan[tripId][`${o}-${d}`];
   if (!sc || !sc.voli || (sc.andata || '') !== (andata || '') || (sc.ritorno || '') !== (ritorno || '')) return null;
-  return sc;
+  const voli = Object.values(sc.voli).slice().sort((x, y) => ((y.ok !== false) - (x.ok !== false)) || (x.pp - y.pp));
+  return { ...sc, voli };
 };
 function FlightRow({ f }) {
   return (
