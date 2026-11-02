@@ -115,7 +115,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -463,7 +463,7 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
             {combos.map(c => (
               <div key={c.o + c.d} className="card combo">
                 <div className="h">
-                  <div><b style={{ fontSize: 17 }}>{c.o} → {c.d}</b><div className="mut small">{apName(c.o)} → {apName(c.d)}</div></div>
+                  <div><b style={{ fontSize: 17 }}>{c.o} → {c.d}</b><div className="mut small">{apName(c.o)} → {apName(c.d)}</div><div className="small b" style={{ color: 'var(--teal)', marginTop: 3 }}>📅 {fmtDs(s.andata)}{ret ? ' ⇄ ' + fmtDs(ret) + ' · A/R' : ' · solo andata'}</div></div>
                   <div>{c.last ? <><div className="price">{eur(c.last.pp)}</div><div className="mut small" style={{ textAlign: 'right' }}>a pers.{c.prev ? ' · ' : ''}<Trend last={c.last} prev={c.prev} /></div><div className="mut small" style={{ textAlign: 'right' }}>min {eur(c.min)} · {c.ps.length} rilev.</div></> : <span className="badge b-mut">nessun prezzo</span>}</div>
                 </div>
                 {(() => { const L = buildLinks(s, c.o, c.d); const main = L.filter(l => l.k === 'gf' || l.k === 'sky'); const rest = L.filter(l => l.k !== 'gf' && l.k !== 'sky'); return <>
@@ -740,7 +740,7 @@ function SettingsTab({ data, store, onCheckUpdate }) {
 
 /* ============ APP ============ */
 const blankSearch = (imp = {}) => ({ origini: imp.origini || [], destinazioni: [], ovunque: false, tipo: 'ar', andata: '', ritorno: '', adulti: imp.adulti || 1, flex: 0, tripId: null, nome: '' });
-const defaultName = s => `${s.origini.join('/')} → ${s.ovunque ? 'Ovunque' : s.destinazioni.join('/')}${s.andata ? ' · ' + fmtDs(s.andata) : ''}`;
+const defaultName = s => `${s.origini.join('/')} → ${s.ovunque ? 'Ovunque' : s.destinazioni.join('/')}${s.andata ? ' · ' + fmtDs(s.andata) : ''}${s.andata && s.tipo === 'ar' && s.ritorno ? '–' + fmtDs(s.ritorno) : ''}`;
 
 function App() {
   const store = useStore(); const { data } = store;
@@ -773,8 +773,10 @@ function App() {
 
   const saveTrip = () => {
     const s = search; const base = (s.tripId && data.viaggi[s.tripId]) || {};
+    const typed = (s.nome || '').trim();
+    const autoOld = base.id ? [defaultName(base), defaultName({ ...base, tipo: 'oa' })] : [];
     const t = {
-      ...base, id: base.id || uid(), nome: (s.nome || '').trim() || base.nome || defaultName(s),
+      ...base, id: base.id || uid(), nome: (!typed || autoOld.includes(typed)) ? defaultName(s) : typed,
       origini: s.origini, destinazioni: s.ovunque ? [] : s.destinazioni, ovunque: s.ovunque, tipo: s.tipo, andata: s.andata,
       ritorno: s.tipo === 'ar' ? s.ritorno : '', adulti: s.adulti, flex: s.flex, target: base.target || null, note: base.note || '',
       archiviato: base.archiviato || false, creato: base.creato || Date.now(), aggiornato: Date.now()
