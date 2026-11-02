@@ -7,13 +7,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f766e">
 <title>Voli</title>
+<link rel="icon" href="voli-icon.svg" type="image/svg+xml">
+<link rel="icon" href="voli-icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="voli-icon-180.png">
 <style>
 :root{--teal:#0f766e;--teal2:#14b8a6;--bg:#f0fdfa;--card:#fff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--ok:#16a34a;--bad:#dc2626}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 header{position:sticky;top:0;z-index:10;background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .top{display:flex;align-items:center;justify-content:space-between;max-width:980px;margin:0 auto}
-.brand{font-weight:800;font-size:20px;letter-spacing:-.01em}
+.brand{display:flex;align-items:center;gap:7px;font-weight:800;font-size:20px;letter-spacing:-.01em}
 .status{font-size:12px;opacity:.95;display:flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:#fbbf24}.dot.on{background:#4ade80}.dot.err{background:#f87171}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(15,23,42,.06);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
@@ -1008,7 +1011,7 @@ function App() {
     <>
       <header>
         <div className="top">
-          <div className="brand">✈ Voli</div>
+          <div className="brand"><svg className="logo" viewBox="5.5 12.5 57 39.5" width="34" height="24" aria-hidden="true"><polyline points="8,15 17,27 24,21 33,37 40.6,41.8" fill="none" stroke="#5eead4" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round"/><g transform="translate(46,42) rotate(18)"><path d="M15 0 L-14 -10 L-5 1.5 Z" fill="#fff"/><path d="M15 0 L-5 1.5 L-10 11 Z" fill="#99f6e4"/></g></svg>Voli</div>
           <div className="status"><span className={'dot ' + (st === 'online' ? 'on' : st.startsWith('errore') ? 'err' : '')} />{st}</div>
         </div>
       </header>
