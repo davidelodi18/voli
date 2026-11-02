@@ -153,6 +153,26 @@ h2{font-size:18px;margin:0 0 10px}h3{font-size:15px;margin:0 0 8px}
 pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-size:12px;overflow-x:auto}
 .ver{font-size:12px;color:var(--mut);text-align:center;margin-top:20px}
 @media(max-width:520px){.grid3{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr 1fr}main{padding-left:10px;padding-right:10px}.card{padding:13px 12px;border-radius:13px}.combos{grid-template-columns:1fr}.brand{font-size:18px}h2{font-size:17px}.stat b{font-size:15px}.btn{padding:11px 14px}}
+.fbox .frow{margin-top:12px}
+.flab{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.flab .fval{color:var(--teal);text-transform:none;letter-spacing:0;font-size:13px}
+.fseg{display:flex;flex-wrap:wrap;width:100%;box-sizing:border-box}
+.fseg button{flex:1 1 auto;padding:7px 8px}
+.frange{width:100%;accent-color:var(--teal);margin:2px 0}
+.frl{display:flex;justify-content:space-between}
+.fmore{margin-top:6px}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;text-decoration:line-through}
+.fchip.on{background:#ccfbf1;border-color:var(--teal2);color:var(--teal);text-decoration:none}
+.fchk{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin-top:10px;cursor:pointer}
+.fchk input{margin-top:3px;accent-color:var(--teal)}
+.irow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.irow.ko{opacity:.6}
+.irl{min-width:0;display:flex;flex-direction:column;gap:7px}
+.ileg{font-size:14px;line-height:1.35}
+.itag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;padding:1px 6px;border-radius:5px;background:#ccfbf1;color:var(--teal);margin-right:6px;vertical-align:1px}
+.itag.r{background:#e0e7ff;color:#4338ca}
+.irp{font-weight:800;color:var(--teal);white-space:nowrap;font-size:17px}
 </style>
 </head>
 <body>
@@ -164,7 +184,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -511,6 +531,168 @@ function ItinCard({ o, d, sc, andata, ritorno, best, children }) {
   );
 }
 
+// ===== Itinerari completi andata + ritorno, con filtri (v1.5) =====
+const FKEY = 'voli_filtri_v1';
+const F0 = { stops: 'all', tA: 'any', tR: 'any', max: null, comodi: true, noSep: false, offO: [], offA: [] };
+const loadF = () => { try { return JSON.parse(localStorage.getItem(FKEY)) || {}; } catch (e) { return {}; } };
+const saveF = f => { try { localStorage.setItem(FKEY, JSON.stringify(f)); } catch (e) {} };
+const slotOf = s => { const m = /^(\d{1,2}):/.exec(s || ''); if (!m) return null; const h = +m[1]; return h < 12 ? 'm' : h < 18 ? 'p' : 's'; };
+const carriersOf = f => (f && f.airline ? f.airline.split(/\s+e\s+|,\s*/).map(x => x.trim()).filter(Boolean) : []);
+const legOk = f => !f || f.ok !== false;
+const valsOf = x => (x ? Object.values(x) : []);
+const stopTxt2 = f => (f.stops === 0 ? 'diretto' : `${f.stops} scal${f.stops > 1 ? 'i' : 'o'}${f.via ? ' a ' + f.via : ''}`);
+
+function itinsOf(sc, o, d) {
+  const out = []; const seen = new Set();
+  const add = (a, r, pp) => {
+    if (!a || pp == null || isNaN(pp)) return;
+    const k = [a.dep, a.arr, a.airline, r ? r.dep : '', r ? r.arr : '', r ? r.airline : ''].join('|');
+    if (seen.has(k)) return; seen.add(k);
+    out.push({ o, d, a, r: r || null, pp: +pp });
+  };
+  valsOf(sc.combo).forEach(c => add(c.a, c.r, c.pp));
+  if (sc.sel) valsOf(sc.ritorni).forEach(r => add(sc.sel, r, r.pp));
+  if (!sc.ritorno) valsOf(sc.voli).forEach(f => add(f, null, f.pp));
+  return out.sort((x, y) => x.pp - y.pp);
+}
+function passesF(it, f) {
+  const legs = it.r ? [it.a, it.r] : [it.a];
+  if (f.comodi && !legs.every(legOk)) return false;
+  if (f.noSep && legs.some(l => l.sep)) return false;
+  if (f.stops === 'direct' && legs.some(l => l.stops !== 0)) return false;
+  if (f.stops === 'max1' && legs.some(l => l.stops > 1)) return false;
+  if (f.tA !== 'any' && slotOf(it.a.dep) !== f.tA) return false;
+  if (it.r && f.tR !== 'any' && slotOf(it.r.dep) !== f.tR) return false;
+  if (f.max != null && it.pp > f.max) return false;
+  if (f.offO.includes(it.o)) return false;
+  if (f.offA.length && legs.some(l => carriersOf(l).some(c => f.offA.includes(c)))) return false;
+  return true;
+}
+
+function FSeg({ value, onChange, opts }) {
+  return <div className="seg fseg">{opts.map(([v, l]) => <button key={v} type="button" className={value === v ? 'act' : ''} onClick={() => onChange(v)}>{l}</button>)}</div>;
+}
+function ItinLeg({ r, f }) {
+  return (
+    <div className="ileg">
+      <span className={'itag' + (r ? ' r' : '')}>{r ? 'RITORNO' : 'ANDATA'}</span>
+      <b>{f.dep}→{f.arr}</b>{f.night ? <sup>+1</sup> : null} <span className="mut small">{f.dur}</span>
+      <div className="small">{f.airline} · <span className="mut">{stopTxt2(f)}{f.sep ? ' · biglietti separati' : ''}{f.change ? ' · cambio aeroporto' : ''}{f.ok === false ? ' · scomodo' : ''}</span></div>
+    </div>
+  );
+}
+function ItinRow({ it }) {
+  return (
+    <div className={'irow' + (legOk(it.a) && legOk(it.r) ? '' : ' ko')}>
+      <div className="irl"><ItinLeg f={it.a} />{it.r && <ItinLeg r f={it.r} />}</div>
+      <div className="irp">{eur(it.pp)}</div>
+    </div>
+  );
+}
+function RouteCard({ o, d, sc, list, tot, andata, ritorno, best }) {
+  const [n, setN] = useState(5);
+  const top = list[0];
+  const more = list.length - 1;
+  return (
+    <div className={'card itin' + (best ? ' best' : '')}>
+      <div className="ih">
+        <div style={{ minWidth: 0 }}>
+          <div className="icity">da {apName(o)}</div>
+          <div className="icode">{o} → {d} · {apName(d)}</div>
+        </div>
+        <div><div className="iprice">{eur(top.pp)}</div><div className="iprice-s">a persona{top.r ? ' · A/R' : ''}</div></div>
+      </div>
+      {best && <span className="ibadge">💰 IL PIÙ CONVENIENTE</span>}
+      <div className="lgblock">
+        <div className="lgh"><span className="lgtag">🛫 ANDATA</span><span>{fmtD(andata).toUpperCase()}</span></div>
+        <LegLine f={top.a} from={o} to={d} />
+        <div className="lgair">{top.a.airline}{top.a.sep ? <span> · biglietti separati</span> : null}</div>
+      </div>
+      {top.r && (
+        <div className="lgblock">
+          <div className="lgh"><span className="lgtag r">🛬 RITORNO</span><span>{fmtD(ritorno).toUpperCase()}</span></div>
+          <LegLine f={top.r} from={d} to={o} />
+          <div className="lgair">{top.r.airline}{top.r.sep ? <span> · biglietti separati</span> : null}</div>
+        </div>
+      )}
+      <div className="ifoot">
+        {sc.url && <a className="btn full" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }} href={sc.url} target="_blank" rel="noopener">Apri su Google Flights ↗</a>}
+        {more > 0 && (
+          <details className="more" style={{ marginTop: 6 }}>
+            <summary>{more === 1 ? 'Un’altra combinazione' : `Altre ${more} combinazioni`}{top.r ? ' andata + ritorno' : ''} ▾</summary>
+            <div className="mut small" style={{ marginBottom: 4 }}>{top.r ? 'Ogni riga è un viaggio completo: il prezzo è il totale andata + ritorno, a persona.' : 'Prezzi a persona.'}</div>
+            {list.slice(1, n + 1).map((it, i) => <ItinRow key={i} it={it} />)}
+            {more > n && <button type="button" className="btn ghost full" style={{ marginTop: 8 }} onClick={() => setN(n + 10)}>Mostra altre {Math.min(10, more - n)}</button>}
+          </details>
+        )}
+        {top.r && !sc.combo && <div className="mut small" style={{ marginTop: 6 }}>Per ora ci sono solo i ritorni del volo di andata migliore: le altre combinazioni arrivano con la prossima rilevazione.</div>}
+        <div className="mut small" style={{ marginTop: 8 }}>🤖 Aggiornato {fmtTs(sc.ts)} · {list.length === tot ? `${tot} combinazioni` : `${list.length} di ${tot} combinazioni con i filtri`}{sc.sky && sc.sky.cheap ? ` · Skyscanner da ${eur(sc.sky.cheap)}` : ''}</div>
+      </div>
+    </div>
+  );
+}
+function TripOptions({ trip, combos }) {
+  const [f, setF] = useState(() => ({ ...F0, ...loadF() }));
+  const upd = p => setF(prev => { const nx = { ...prev, ...p }; saveF(nx); return nx; });
+  const reset = () => { saveF(F0); setF(F0); };
+  const all = combos.map(x => ({ ...x, its: itinsOf(x.sc, x.o, x.d) }));
+  const flat = all.flatMap(x => x.its);
+  if (!flat.length) return null;
+  const ar = flat.some(it => it.r);
+  const prices = flat.map(i => i.pp);
+  const pMin = Math.floor(Math.min(...prices)), pMax = Math.ceil(Math.max(...prices));
+  const carriers = [...new Set(flat.flatMap(it => [...carriersOf(it.a), ...carriersOf(it.r)]))].sort();
+  const origins = [...new Set(all.map(x => x.o))];
+  const fx = { ...f, max: f.max != null && f.max < pMax ? Math.max(f.max, pMin) : null };
+  const res = all.map(x => ({ ...x, list: x.its.filter(it => passesF(it, fx)) }));
+  const shown = res.filter(x => x.list.length).sort((a, b) => a.list[0].pp - b.list[0].pp);
+  const hidden = res.filter(x => x.its.length && !x.list.length);
+  const nShown = res.reduce((s, x) => s + x.list.length, 0);
+  const nOn = (fx.stops !== 'all') + (fx.tA !== 'any') + (ar && fx.tR !== 'any') + (fx.max != null) + !!fx.noSep + (fx.offO.length > 0) + (fx.offA.length > 0) + !fx.comodi;
+  const tog = (key, v) => upd({ [key]: f[key].includes(v) ? f[key].filter(x => x !== v) : [...f[key], v] });
+  const slots = [['any', 'Qualsiasi'], ['m', 'Mattina'], ['p', 'Pomeriggio'], ['s', 'Sera']];
+  return <>
+    <div className="secttl">✈ Le tue opzioni · dalla più economica</div>
+    <div className="card fbox">
+      <div className="row"><b>🎛️ Filtri{nOn ? ` · ${nOn} attiv${nOn > 1 ? 'i' : 'o'}` : ''}</b><span className="mut small">{nShown} di {flat.length} itinerari</span></div>
+      <div className="frow">
+        <div className="flab">Scali</div>
+        <FSeg value={fx.stops} onChange={v => upd({ stops: v })} opts={[['all', 'Tutti'], ['direct', 'Solo diretti'], ['max1', 'Max 1 scalo']]} />
+      </div>
+      <div className="frow">
+        <div className="flab">Prezzo massimo a persona: <span className="fval">{fx.max == null ? 'nessun limite' : eur(fx.max)}</span></div>
+        <input className="frange" type="range" min={pMin} max={pMax} step="1" value={fx.max == null ? pMax : fx.max} onChange={e => { const v = +e.target.value; upd({ max: v >= pMax ? null : v }); }} />
+        <div className="frl mut small"><span>{eur(pMin)}</span><span>{eur(pMax)}</span></div>
+      </div>
+      <details className="more fmore">
+        <summary>Altri filtri: orari, aeroporti, compagnie ▾</summary>
+        <div className="frow">
+          <div className="flab">Partenza andata</div>
+          <FSeg value={fx.tA} onChange={v => upd({ tA: v })} opts={slots} />
+        </div>
+        {ar && <div className="frow">
+          <div className="flab">Partenza ritorno</div>
+          <FSeg value={fx.tR} onChange={v => upd({ tR: v })} opts={slots} />
+        </div>}
+        <div className="mut small" style={{ marginTop: 4 }}>Mattina prima delle 12 · pomeriggio 12–18 · sera dopo le 18</div>
+        {origins.length > 1 && <div className="frow">
+          <div className="flab">Parto da</div>
+          <div className="fchips">{origins.map(o => <button type="button" key={o} className={'fchip' + (f.offO.includes(o) ? '' : ' on')} onClick={() => tog('offO', o)}>{apName(o)}</button>)}</div>
+        </div>}
+        {carriers.length > 1 && <div className="frow">
+          <div className="flab">Compagnie · tocca per escludere</div>
+          <div className="fchips">{carriers.map(c => <button type="button" key={c} className={'fchip' + (f.offA.includes(c) ? '' : ' on')} onClick={() => tog('offA', c)}>{c}</button>)}</div>
+        </div>}
+        <label className="fchk"><input type="checkbox" checked={!!f.comodi} onChange={e => upd({ comodi: e.target.checked })} /><span>Solo voli comodi <span className="mut">(niente arrivi il giorno dopo, cambi di aeroporto, più di 1 scalo o viaggi oltre 12 h)</span></span></label>
+        <label className="fchk"><input type="checkbox" checked={!!f.noSep} onChange={e => upd({ noSep: e.target.checked })} /><span>Escludi biglietti separati</span></label>
+      </details>
+      {nOn > 0 && <button type="button" className="btn ghost full" style={{ marginTop: 8 }} onClick={reset}>Azzera filtri</button>}
+    </div>
+    {shown.map((x, i) => <RouteCard key={x.o + x.d} o={x.o} d={x.d} sc={x.sc} list={x.list} tot={x.its.length} andata={trip.andata} ritorno={trip.ritorno} best={i === 0 && shown.length > 1} />)}
+    {hidden.length > 0 && <div className="card mut small">Con questi filtri non ci sono itinerari da {hidden.map(x => apName(x.o)).join(', ')}.</div>}
+  </>;
+}
+
 function HowSteps() {
   return (
     <div className="steps">
@@ -835,11 +1017,7 @@ function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRe
             <button className="btn full mt" onClick={onOpenSearch}>🔎 Cerca voli per questo viaggio</button>
           </div>
         );
-        combos.sort((a, b) => (bestTotalOf(a.sc) ?? 1e9) - (bestTotalOf(b.sc) ?? 1e9));
-        return <>
-          <div className="secttl">✈ Le tue opzioni · dalla più economica</div>
-          {combos.map((x, i) => <ItinCard key={x.o + x.d} o={x.o} d={x.d} sc={x.sc} andata={trip.andata} ritorno={trip.ritorno} best={i === 0 && combos.length > 1} />)}
-        </>;
+        return <TripOptions trip={trip} combos={combos} />;
       })()}
 
       {st.ps.length > 0 && <>
