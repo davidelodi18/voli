@@ -115,7 +115,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -166,14 +166,25 @@ const COLORS = ['#0f766e', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#059669'
 const FONTI = ['Google Flights', 'Skyscanner', 'Kayak', 'Momondo', 'Ryanair', 'Wizz Air', 'easyJet', 'Vueling', 'Volotea', 'ITA Airways', 'Altro'];
 
 /* ============ LINK BUILDER ============ */
+/* Google Flights: parametro tfs = protobuf (tratte, passeggeri, classe, tipo viaggio) in base64 url-safe */
+const pbVar = n => { const o = []; while (n > 127) { o.push((n & 127) | 128); n = Math.floor(n / 128); } o.push(n); return o; };
+const pbLD = (f, b) => [...pbVar((f << 3) | 2), ...pbVar(b.length), ...b];
+const pbVI = (f, n) => [...pbVar(f << 3), ...pbVar(n)];
+const pbStr = t => [...new TextEncoder().encode(t)];
+const gfLeg = (d, o, t) => [...pbLD(2, pbStr(d)), ...pbLD(13, pbLD(2, pbStr(o))), ...pbLD(14, pbLD(2, pbStr(t)))];
+function gfTfs(o, t, a, r, n) {
+  let b = pbLD(3, gfLeg(a, o, t));
+  if (r) b = b.concat(pbLD(3, gfLeg(r, t, o)));
+  b = b.concat(pbLD(8, Array(n).fill(1)), pbVI(9, 1), pbVI(19, r ? 1 : 2));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
 function buildLinks(s, o, d) {
   const n = Math.max(1, parseInt(s.adulti) || 1);
   const ret = s.tipo === 'ar' && s.ritorno ? s.ritorno : '';
   const a = s.andata;
   const kflex = s.flex ? `-flexible-${s.flex}days` : '';
   const L = [];
-  const gq = `Flights from ${o} to ${d} on ${a}${ret ? ` through ${ret}` : ' one way'} for ${n} adult${n > 1 ? 's' : ''}`;
-  L.push({ k: 'gf', g: 'meta', label: 'Google Flights', url: `https://www.google.com/travel/flights?q=${enc(gq)}&hl=it&curr=EUR` });
+  L.push({ k: 'gf', g: 'meta', label: 'Google Flights', url: `https://www.google.com/travel/flights/search?tfs=${gfTfs(o, d, a, ret, n)}&hl=it&curr=EUR` });
   L.push({ k: 'sky', g: 'meta', label: 'Skyscanner', url: `https://www.skyscanner.it/transport/flights/${o.toLowerCase()}/${d.toLowerCase()}/${yymmdd(a)}/${ret ? yymmdd(ret) + '/' : ''}?adultsv2=${n}&cabinclass=economy&rtn=${ret ? 1 : 0}` });
   L.push({ k: 'skym', g: 'meta', label: 'Skyscanner mese', url: `https://www.skyscanner.it/transport/flights/${o.toLowerCase()}/${d.toLowerCase()}/${yymm(a)}/${ret ? yymm(ret) + '/' : ''}?adultsv2=${n}&cabinclass=economy&rtn=${ret ? 1 : 0}` });
   L.push({ k: 'kay', g: 'meta', label: 'Kayak' + (s.flex ? ` ±${s.flex}` : ''), url: `https://www.kayak.it/flights/${o}-${d}/${a}${kflex}${ret ? `/${ret}${kflex}` : ''}${n > 1 ? `/${n}adults` : ''}?sort=price_a` });
