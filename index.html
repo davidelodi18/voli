@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f766e">
+<title>Voli</title>
+<style>
+:root{--teal:#0f766e;--teal2:#14b8a6;--bg:#f0fdfa;--card:#fff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--ok:#16a34a;--bad:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:10;background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 0;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.top{display:flex;align-items:center;justify-content:space-between;max-width:980px;margin:0 auto}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.01em}
+.status{font-size:12px;opacity:.95;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#fbbf24}.dot.on{background:#4ade80}.dot.err{background:#f87171}
+nav{display:flex;gap:2px;max-width:980px;margin:6px auto 0}
+nav button{flex:1;background:transparent;border:0;color:#ccfbf1;padding:10px 4px;font-size:15px;font-weight:600;border-bottom:3px solid transparent;cursor:pointer}
+nav button.act{color:#fff;border-bottom-color:#5eead4}
+main{max-width:980px;margin:0 auto;padding:14px 12px 70px}
+.card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(15,23,42,.08);margin-bottom:12px}
+label.f{display:block;font-size:11px;font-weight:700;color:var(--mut);margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid #99f6e4;border-color:var(--teal2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mt{margin-top:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.sec{background:#ccfbf1;color:var(--teal)}
+.btn.ghost{background:transparent;color:var(--teal);border:1px solid #99f6e4}
+.btn.danger{background:#fee2e2;color:var(--bad)}
+.btn.small{padding:7px 10px;font-size:13px}
+.btn.full{width:100%}
+.seg{display:inline-flex;background:#e2e8f0;border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;padding:7px 12px;border-radius:8px;font-weight:600;color:var(--mut);cursor:pointer;font-size:14px}
+.seg button.act{background:#fff;color:var(--teal);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.picker{position:relative}
+.chips{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;min-height:46px;align-items:center}
+.chips input{border:0;flex:1;min-width:110px;padding:4px;outline:none}
+.chip{background:#ccfbf1;color:#115e59;border-radius:999px;padding:4px 4px 4px 10px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:4px}
+.chip small{font-weight:500;opacity:.8}
+.chip button{border:0;background:transparent;color:#115e59;font-size:17px;line-height:1;cursor:pointer;padding:0 5px}
+.sugg{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--line);border-radius:10px;margin-top:4px;z-index:20;box-shadow:0 8px 20px rgba(0,0,0,.12);overflow:hidden}
+.sugg div{padding:10px 12px;cursor:pointer;font-size:15px}.sugg div:hover{background:#f0fdfa}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.quick button{border:1px dashed #5eead4;background:#fff;color:var(--teal);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}
+.combos{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.combo{margin-bottom:0}
+.combo .h{display:flex;justify-content:space-between;gap:8px;margin-bottom:10px}
+.price{font-size:21px;font-weight:800;color:var(--teal);text-align:right}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.lk{display:inline-block;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;background:#f1f5f9;color:#0f172a}
+.lk.meta{background:#e0f2fe;color:#075985}
+.lk.air{background:#fef3c7;color:#92400e}
+.lk.cmb{background:#ede9fe;color:#5b21b6}
+.mut{color:var(--mut)}.small{font-size:12px}.b{font-weight:700}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;vertical-align:middle}
+.b-ok{background:#dcfce7;color:#166534}.b-warn{background:#fef3c7;color:#92400e}.b-mut{background:#f1f5f9;color:#475569}.b-teal{background:#ccfbf1;color:#115e59}
+.up{color:var(--bad)}.down{color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;color:var(--mut);letter-spacing:.03em}
+td.num,th.num{text-align:right;white-space:nowrap}
+.tblwrap{overflow-x:auto}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.modal{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+@media(min-width:640px){.modal-bg{align-items:center}.modal{border-radius:18px}}
+.pop .modal{text-align:center;max-width:380px;border-radius:18px;margin:16px}
+.pop.modal-bg{align-items:center}
+.pop .big{font-size:42px}
+h2{font-size:18px;margin:0 0 10px}h3{font-size:15px;margin:0 0 8px}
+.empty{padding:26px 10px;text-align:center;color:var(--mut)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.banner{background:#fef3c7;color:#92400e;padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:12px;line-height:1.4}
+.tripcard{cursor:pointer;transition:transform .1s}.tripcard:active{transform:scale(.99)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{background:#f0fdfa;border-radius:10px;padding:8px}.stat b{display:block;font-size:16px}.stat span{font-size:11px;color:var(--mut);text-transform:uppercase}
+.back{background:none;border:0;color:var(--teal);font-weight:700;font-size:15px;padding:4px 0 10px;cursor:pointer}
+.chk{display:flex;align-items:center;gap:8px;font-size:15px;cursor:pointer}
+.chk input{width:auto}
+pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-size:12px;overflow-x:auto}
+.ver{font-size:12px;color:var(--mut);text-align:center;margin-top:20px}
+@media(max-width:520px){.grid3{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script type="text/babel" data-presets="react">
+const APP_VERSION = '1.0.0';
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* ============ CONFIG FIREBASE ============
+   Incolla qui la config del progetto Firebase (Realtime Database + Auth anonima).
+   Se apiKey è vuota l'app funziona in modalità locale (dati solo su questo dispositivo). */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDKR7Lq8FPid18yUrLDTANOmc1GlqcKw1Y",
+  authDomain: "voli-ced01.firebaseapp.com",
+  databaseURL: "https://voli-ced01-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "voli-ced01",
+  storageBucket: "voli-ced01.firebasestorage.app",
+  messagingSenderId: "989475167974",
+  appId: "1:989475167974:web:99bb60de07f4c1ef3ae527"
+};
+const ROOT = 'voli';
+const FB_ON = !!FIREBASE_CONFIG.apiKey && !!FIREBASE_CONFIG.databaseURL;
+
+/* ============ AEROPORTI ============ */
+const AIRPORTS_RAW = "BLQ|Bologna;VRN|Verona;BGY|Bergamo Orio al Serio;MXP|Milano Malpensa;LIN|Milano Linate;VCE|Venezia;TSF|Treviso;TRS|Trieste;PSA|Pisa;FLR|Firenze;FCO|Roma Fiumicino;CIA|Roma Ciampino;NAP|Napoli;BRI|Bari;BDS|Brindisi;SUF|Lamezia Terme;REG|Reggio Calabria;CTA|Catania;PMO|Palermo;TPS|Trapani;CAG|Cagliari;OLB|Olbia;AHO|Alghero;TRN|Torino;GOA|Genova;CUF|Cuneo;PEG|Perugia;AOI|Ancona;RMI|Rimini;PSR|Pescara;BZO|Bolzano;CRV|Crotone;CIY|Comiso;PMF|Parma;FRL|Forlì;"
++ "MAD|Madrid;BCN|Barcellona;SVQ|Siviglia;VLC|Valencia;AGP|Malaga;ALC|Alicante;PMI|Palma di Maiorca;IBZ|Ibiza;MAH|Minorca;BIO|Bilbao;SCQ|Santiago de Compostela;GRX|Granada;XRY|Jerez;SDR|Santander;ZAZ|Saragozza;TFS|Tenerife Sud;TFN|Tenerife Nord;LPA|Gran Canaria;ACE|Lanzarote;FUE|Fuerteventura;GRO|Girona;REU|Reus;LIS|Lisbona;OPO|Porto;FAO|Faro;FNC|Madeira;PDL|Azzorre Ponta Delgada;"
++ "LHR|Londra Heathrow;LGW|Londra Gatwick;STN|Londra Stansted;LTN|Londra Luton;LCY|Londra City;MAN|Manchester;EDI|Edimburgo;GLA|Glasgow;BHX|Birmingham;BRS|Bristol;LPL|Liverpool;DUB|Dublino;ORK|Cork;SNN|Shannon;BFS|Belfast;"
++ "CDG|Parigi Charles de Gaulle;ORY|Parigi Orly;BVA|Parigi Beauvais;NCE|Nizza;MRS|Marsiglia;LYS|Lione;TLS|Tolosa;BOD|Bordeaux;NTE|Nantes;BIQ|Biarritz;MPL|Montpellier;AMS|Amsterdam;EIN|Eindhoven;RTM|Rotterdam;BRU|Bruxelles;CRL|Bruxelles Charleroi;LUX|Lussemburgo;"
++ "FRA|Francoforte;HHN|Francoforte Hahn;MUC|Monaco di Baviera;BER|Berlino;HAM|Amburgo;DUS|Düsseldorf;CGN|Colonia;STR|Stoccarda;NUE|Norimberga;FMM|Memmingen;FKB|Karlsruhe Baden-Baden;LEJ|Lipsia;DRS|Dresda;HAJ|Hannover;BRE|Brema;VIE|Vienna;SZG|Salisburgo;INN|Innsbruck;GRZ|Graz;ZRH|Zurigo;GVA|Ginevra;BSL|Basilea;BRN|Berna;LUG|Lugano;"
++ "CPH|Copenaghen;BLL|Billund;ARN|Stoccolma Arlanda;NYO|Stoccolma Skavsta;GOT|Göteborg;OSL|Oslo;TRF|Oslo Torp;BGO|Bergen;TOS|Tromsø;HEL|Helsinki;RVN|Rovaniemi;KEF|Reykjavík;RIX|Riga;TLL|Tallinn;VNO|Vilnius;"
++ "PRG|Praga;BUD|Budapest;WAW|Varsavia Chopin;WMI|Varsavia Modlin;KRK|Cracovia;GDN|Danzica;WRO|Breslavia;KTW|Katowice;BTS|Bratislava;LJU|Lubiana;ZAG|Zagabria;SPU|Spalato;DBV|Dubrovnik;ZAD|Zara;PUY|Pola;BEG|Belgrado;TIA|Tirana;SKP|Skopje;SJJ|Sarajevo;TGD|Podgorica;OTP|Bucarest;CLJ|Cluj;SOF|Sofia;VAR|Varna;BOJ|Burgas;KIV|Chișinău;"
++ "ATH|Atene;SKG|Salonicco;JTR|Santorini;JMK|Mykonos;HER|Creta Heraklion;CHQ|Creta Chania;RHO|Rodi;CFU|Corfù;KGS|Kos;ZTH|Zante;EFL|Cefalonia;LCA|Larnaca;PFO|Paphos;MLA|Malta;IST|Istanbul;SAW|Istanbul Sabiha;AYT|Antalya;ADB|Smirne;DLM|Dalaman;BJV|Bodrum;"
++ "RAK|Marrakech;CMN|Casablanca;FEZ|Fès;AGA|Agadir;TNG|Tangeri;TUN|Tunisi;NBE|Enfidha;DJE|Djerba;CAI|Il Cairo;HRG|Hurghada;SSH|Sharm el-Sheikh;RMF|Marsa Alam;TLV|Tel Aviv;AMM|Amman;DXB|Dubai;AUH|Abu Dhabi;DOH|Doha;"
++ "JFK|New York JFK;EWR|New York Newark;BOS|Boston;MIA|Miami;LAX|Los Angeles;SFO|San Francisco;ORD|Chicago;YYZ|Toronto;YUL|Montréal;MEX|Città del Messico;CUN|Cancún;GRU|San Paolo;EZE|Buenos Aires;BKK|Bangkok;HKT|Phuket;SIN|Singapore;HND|Tokyo Haneda;NRT|Tokyo Narita;ICN|Seul;PEK|Pechino;HKG|Hong Kong;DEL|Delhi;BOM|Mumbai;MLE|Malé;CPT|Città del Capo;JNB|Johannesburg;NBO|Nairobi;ZNZ|Zanzibar;MRU|Mauritius;SEZ|Seychelles;SYD|Sydney;MEL|Melbourne";
+const AIRPORTS = AIRPORTS_RAW.split(';').map(s => { const [c, n] = s.split('|'); return { c, n }; });
+const AP = Object.fromEntries(AIRPORTS.map(a => [a.c, a]));
+const apName = c => (AP[c] ? AP[c].n : c);
+
+/* ============ HELPERS ============ */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const yymmdd = d => (d ? d.slice(2, 4) + d.slice(5, 7) + d.slice(8, 10) : '');
+const yymm = d => (d ? d.slice(2, 4) + d.slice(5, 7) : '');
+const fmtD = d => (d ? new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' }) : '—');
+const fmtDs = d => (d ? new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '');
+const fmtTs = ts => new Date(ts).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const eur = v => (v == null || isNaN(v) ? '—' : Number(v).toLocaleString('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }));
+const today0 = () => new Date(new Date().toDateString());
+const daysTo = d => (d ? Math.round((new Date(d + 'T00:00:00') - today0()) / 86400000) : null);
+const iso = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+const addDays = (d, n) => { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return iso(x); };
+const nextWeekday = (wd) => { const x = today0(); const diff = (wd - x.getDay() + 7) % 7 || 7; x.setDate(x.getDate() + diff); return iso(x); };
+const enc = encodeURIComponent;
+const COLORS = ['#0f766e', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#059669', '#db2777', '#0891b2', '#65a30d', '#9333ea'];
+const FONTI = ['Google Flights', 'Skyscanner', 'Kayak', 'Momondo', 'Ryanair', 'Wizz Air', 'easyJet', 'Vueling', 'Volotea', 'ITA Airways', 'Altro'];
+
+/* ============ LINK BUILDER ============ */
+function buildLinks(s, o, d) {
+  const n = Math.max(1, parseInt(s.adulti) || 1);
+  const ret = s.tipo === 'ar' && s.ritorno ? s.ritorno : '';
+  const a = s.andata;
+  const kflex = s.flex ? `-flexible-${s.flex}days` : '';
+  const L = [];
+  const gq = `Flights from ${o} to ${d} on ${a}${ret ? ` through ${ret}` : ' one way'} for ${n} adult${n > 1 ? 's' : ''}`;
+  L.push({ k: 'gf', g: 'meta', label: 'Google Flights', url: `https://www.google.com/travel/flights?q=${enc(gq)}&hl=it&curr=EUR` });
+  L.push({ k: 'sky', g: 'meta', label: 'Skyscanner', url: `https://www.skyscanner.it/transport/flights/${o.toLowerCase()}/${d.toLowerCase()}/${yymmdd(a)}/${ret ? yymmdd(ret) + '/' : ''}?adultsv2=${n}&cabinclass=economy&rtn=${ret ? 1 : 0}` });
+  L.push({ k: 'skym', g: 'meta', label: 'Skyscanner mese', url: `https://www.skyscanner.it/transport/flights/${o.toLowerCase()}/${d.toLowerCase()}/${yymm(a)}/${ret ? yymm(ret) + '/' : ''}?adultsv2=${n}&cabinclass=economy&rtn=${ret ? 1 : 0}` });
+  L.push({ k: 'kay', g: 'meta', label: 'Kayak' + (s.flex ? ` ±${s.flex}` : ''), url: `https://www.kayak.it/flights/${o}-${d}/${a}${kflex}${ret ? `/${ret}${kflex}` : ''}${n > 1 ? `/${n}adults` : ''}?sort=price_a` });
+  L.push({ k: 'mom', g: 'meta', label: 'Momondo', url: `https://www.momondo.it/flight-search/${o}-${d}/${a}${ret ? `/${ret}` : ''}${n > 1 ? `/${n}adults` : ''}?sort=price_a` });
+  const ry = new URLSearchParams({ adults: n, teens: 0, children: 0, infants: 0, dateOut: a, dateIn: ret, isConnectedFlight: false, isReturn: !!ret, discount: 0, promoCode: '', originIata: o, destinationIata: d, tpAdults: n, tpTeens: 0, tpChildren: 0, tpInfants: 0, tpStartDate: a, tpEndDate: ret, tpDiscount: 0, tpPromoCode: '', tpOriginIata: o, tpDestinationIata: d });
+  L.push({ k: 'ry', g: 'air', label: 'Ryanair', url: `https://www.ryanair.com/it/it/trip/flights/select?${ry}` });
+  L.push({ k: 'wz', g: 'air', label: 'Wizz Air', url: `https://wizzair.com/it-it/booking/select-flight/${o}/${d}/${a}/${ret || 'null'}/${n}/0/0/null` });
+  L.push({ k: 'ez', g: 'air', label: 'easyJet', url: `https://www.easyjet.com/deeplink?lang=IT&dep=${o}&dest=${d}&dd=${a}${ret ? `&rd=${ret}` : ''}&apax=${n}&cpax=0&ipax=0&isOneWay=${ret ? 'off' : 'on'}` });
+  return L;
+}
+function buildAnywhereLinks(s, o) {
+  const n = Math.max(1, parseInt(s.adulti) || 1);
+  const ret = s.tipo === 'ar' && s.ritorno ? s.ritorno : '';
+  const a = s.andata;
+  const L = [];
+  L.push({ k: 'sky', g: 'meta', label: 'Skyscanner Ovunque', url: `https://www.skyscanner.it/transport/flights-from/${o.toLowerCase()}/${yymmdd(a)}/${ret ? yymmdd(ret) + '/' : ''}?adultsv2=${n}&rtn=${ret ? 1 : 0}` });
+  L.push({ k: 'skym', g: 'meta', label: 'Skyscanner Ovunque (mese)', url: `https://www.skyscanner.it/transport/flights-from/${o.toLowerCase()}/${yymm(a)}/${ret ? yymm(ret) + '/' : ''}?adultsv2=${n}&rtn=${ret ? 1 : 0}` });
+  L.push({ k: 'kex', g: 'meta', label: 'Kayak Explore', url: `https://www.kayak.it/explore/${o}-anywhere/${a.replace(/-/g, '')}${ret ? ',' + ret.replace(/-/g, '') : ''}` });
+  const days = ret ? Math.round((new Date(ret) - new Date(a)) / 86400000) : '';
+  const ff = new URLSearchParams({ originIata: o, destinationIata: 'ANY', isReturn: !!ret, isMacDestination: false, promoCode: '', adults: n, teens: 0, children: 0, infants: 0, dateOut: a, dateIn: ret, daysTrip: days, isExactDate: true, currency: 'EUR' });
+  L.push({ k: 'ryf', g: 'air', label: 'Ryanair Fare Finder', url: `https://www.ryanair.com/it/it/fare-finder?${ff}` });
+  return L;
+}
+function buildCombinedKayak(s) {
+  const n = Math.max(1, parseInt(s.adulti) || 1);
+  const ret = s.tipo === 'ar' && s.ritorno ? s.ritorno : '';
+  const kflex = s.flex ? `-flexible-${s.flex}days` : '';
+  return `https://www.kayak.it/flights/${s.origini.join(',')}-${s.destinazioni.join(',')}/${s.andata}${kflex}${ret ? `/${ret}${kflex}` : ''}${n > 1 ? `/${n}adults` : ''}?sort=price_a`;
+}
+
+/* ============ AGGIORNAMENTO APP ============ */
+async function checkUpdate() {
+  if (location.protocol === 'file:') return null;
+  const r = await fetch(location.origin + location.pathname + '?nocache=' + Date.now(), { cache: 'no-store' });
+  if (!r.ok) return null;
+  const t = await r.text();
+  const m = t.match(/APP_VERSION\s*=\s*'([\d.]+)'/);
+  return m && m[1] !== APP_VERSION ? m[1] : null;
+}
+const hardReload = v => location.replace(location.origin + location.pathname + '?v=' + (v || Date.now()));
+
+/* ============ STORE (Firebase o locale) ============ */
+const clean = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+function useStore() {
+  const [data, setData] = useState({ viaggi: {}, prezzi: {}, impostazioni: {} });
+  const [status, setStatus] = useState(FB_ON ? 'connessione…' : 'locale');
+  const [ready, setReady] = useState(!FB_ON);
+  const dbRef = useRef(null);
+  useEffect(() => {
+    if (!FB_ON) {
+      try { const raw = localStorage.getItem('voli_data'); if (raw) setData(JSON.parse(raw)); } catch (e) {}
+      return;
+    }
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database(); dbRef.current = db;
+    let off = null;
+    firebase.auth().signInAnonymously().catch(e => setStatus('errore: ' + e.message));
+    const unsub = firebase.auth().onAuthStateChanged(u => {
+      if (!u) return;
+      const r = db.ref(ROOT);
+      const cb = r.on('value', snap => {
+        const v = snap.val() || {};
+        setData({ viaggi: v.viaggi || {}, prezzi: v.prezzi || {}, impostazioni: v.impostazioni || {} });
+        setStatus('online'); setReady(true);
+      }, err => setStatus('errore: ' + err.message));
+      off = () => r.off('value', cb);
+    });
+    return () => { unsub(); off && off(); };
+  }, []);
+  const update = (map) => {
+    const m = {}; Object.keys(map).forEach(k => { m[k] = clean(map[k]); });
+    if (FB_ON) { if (!dbRef.current) return alert('Database non ancora connesso'); return dbRef.current.ref(ROOT).update(m).catch(e => alert('Errore salvataggio: ' + e.message)); }
+    setData(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      Object.keys(m).forEach(path => {
+        const parts = path.split('/'); let o = next;
+        for (let i = 0; i < parts.length - 1; i++) { o[parts[i]] = o[parts[i]] || {}; o = o[parts[i]]; }
+        const last = parts[parts.length - 1];
+        if (m[path] == null) delete o[last]; else o[last] = m[path];
+      });
+      try { localStorage.setItem('voli_data', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+  };
+  const replaceAll = (obj) => {
+    const v = { viaggi: obj.viaggi || {}, prezzi: obj.prezzi || {}, impostazioni: obj.impostazioni || {} };
+    if (FB_ON) return dbRef.current && dbRef.current.ref(ROOT).set(clean(v));
+    setData(v); try { localStorage.setItem('voli_data', JSON.stringify(v)); } catch (e) {}
+  };
+  return { data, status, ready, update, replaceAll };
+}
+
+/* ============ STATISTICHE VIAGGIO ============ */
+const keyOf = p => `${p.origine}-${p.destinazione}|${p.andata || ''}|${p.ritorno || ''}`;
+function tripStats(tripId, prezziAll) {
+  const ps = prezziAll.filter(p => p.tripId === tripId).sort((a, b) => a.ts - b.ts);
+  const by = {};
+  ps.forEach(p => { (by[keyOf(p)] = by[keyOf(p)] || []).push(p); });
+  const groups = Object.entries(by).map(([k, arr]) => ({
+    k, all: arr, last: arr[arr.length - 1], prev: arr.length > 1 ? arr[arr.length - 2] : null,
+    min: Math.min(...arr.map(x => x.pp)), max: Math.max(...arr.map(x => x.pp)), n: arr.length
+  })).sort((a, b) => a.last.pp - b.last.pp);
+  return { ps, groups, best: groups[0] || null, minEver: ps.length ? Math.min(...ps.map(p => p.pp)) : null };
+}
+function Trend({ last, prev }) {
+  if (!prev) return null;
+  const d = last.pp - prev.pp;
+  if (Math.abs(d) < 0.5) return <span className="mut small">= stabile</span>;
+  return <span className={'small b ' + (d > 0 ? 'up' : 'down')}>{d > 0 ? '▲' : '▼'} {eur(Math.abs(d))}</span>;
+}
+
+/* ============ COMPONENTI ============ */
+function AirportPicker({ value, onChange, placeholder }) {
+  const [q, setQ] = useState(''); const [open, setOpen] = useState(false);
+  const sugg = useMemo(() => {
+    const s = q.trim().toLowerCase(); if (!s) return [];
+    const starts = AIRPORTS.filter(a => !value.includes(a.c) && a.c.toLowerCase().startsWith(s));
+    const incl = AIRPORTS.filter(a => !value.includes(a.c) && !a.c.toLowerCase().startsWith(s) && a.n.toLowerCase().includes(s));
+    return [...starts, ...incl].slice(0, 8);
+  }, [q, value]);
+  const add = c => { c = (c || '').toUpperCase().trim(); if (/^[A-Z]{3}$/.test(c) && !value.includes(c)) onChange([...value, c]); setQ(''); };
+  return (
+    <div className="picker">
+      <div className="chips">
+        {value.map(c => <span key={c} className="chip">{c} {AP[c] && <small>{AP[c].n}</small>}<button onClick={() => onChange(value.filter(x => x !== c))}>×</button></span>)}
+        <input value={q} placeholder={value.length ? '+ aggiungi' : placeholder}
+          onChange={e => { setQ(e.target.value); setOpen(true); }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') { e.preventDefault(); if (sugg[0]) add(sugg[0].c); else add(q); }
+            if (e.key === 'Backspace' && !q && value.length) onChange(value.slice(0, -1));
+          }}
+          onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)} />
+      </div>
+      {open && (sugg.length > 0 || /^[a-zA-Z]{3}$/.test(q.trim())) && (
+        <div className="sugg">
+          {sugg.map(a => <div key={a.c} onMouseDown={e => { e.preventDefault(); add(a.c); }}><b>{a.c}</b> · {a.n}</div>)}
+          {!sugg.length && <div onMouseDown={e => { e.preventDefault(); add(q); }}>Aggiungi codice <b>{q.toUpperCase()}</b></div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew }) {
+  const s = search; const up = p => setSearch({ ...s, ...p });
+  const ret = s.tipo === 'ar' ? s.ritorno : '';
+  const hasDates = s.andata && (s.tipo === 'oa' || s.ritorno);
+  const dateErr = s.andata && ret && ret < s.andata;
+  const valid = s.origini.length && (s.ovunque || s.destinazioni.length) && hasDates && !dateErr;
+  const prezzi = Object.values(data.prezzi || {});
+  const trip = s.tripId ? data.viaggi[s.tripId] : null;
+
+  const combos = useMemo(() => {
+    if (s.ovunque) return [];
+    const list = s.origini.flatMap(o => s.destinazioni.filter(d => d !== o).map(d => {
+      const ps = prezzi.filter(p => p.origine === o && p.destinazione === d && (p.andata || '') === (s.andata || '') && (p.ritorno || '') === (ret || '') && (!s.tripId || p.tripId === s.tripId)).sort((a, b) => a.ts - b.ts);
+      return { o, d, ps, last: ps[ps.length - 1] || null, prev: ps.length > 1 ? ps[ps.length - 2] : null, min: ps.length ? Math.min(...ps.map(p => p.pp)) : null };
+    }));
+    return list.sort((a, b) => (a.last ? a.last.pp : 1e9) - (b.last ? b.last.pp : 1e9));
+  }, [s, data.prezzi]);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="row" style={{ marginBottom: 10 }}>
+          <h2 style={{ margin: 0 }}>{trip ? '✈ ' + trip.nome : 'Nuova ricerca'}</h2>
+          <div className="sp" />
+          {trip && <button className="btn ghost small" onClick={onNew}>+ Nuova</button>}
+        </div>
+        <label className="f">Da (anche più aeroporti)</label>
+        <AirportPicker value={s.origini} onChange={v => up({ origini: v })} placeholder="Es. BLQ, Bologna…" />
+        {(data.impostazioni.origini || []).length > 0 && JSON.stringify(s.origini) !== JSON.stringify(data.impostazioni.origini) &&
+          <div className="quick"><button onClick={() => up({ origini: data.impostazioni.origini })}>Usa i miei aeroporti: {data.impostazioni.origini.join(', ')}</button></div>}
+        <div className="mt">
+          <div className="row" style={{ marginBottom: 4 }}>
+            <label className="f" style={{ margin: 0 }}>A</label><div className="sp" />
+            <label className="chk small"><input type="checkbox" checked={s.ovunque} onChange={e => up({ ovunque: e.target.checked })} /> Ovunque</label>
+          </div>
+          {!s.ovunque ? <AirportPicker value={s.destinazioni} onChange={v => up({ destinazioni: v })} placeholder="Es. SVQ, Siviglia…" />
+            : <div className="mut small">Cerca le destinazioni più economiche da ogni aeroporto di partenza.</div>}
+        </div>
+        <div className="row mt">
+          <div className="seg">
+            <button className={s.tipo === 'ar' ? 'act' : ''} onClick={() => up({ tipo: 'ar' })}>Andata e ritorno</button>
+            <button className={s.tipo === 'oa' ? 'act' : ''} onClick={() => up({ tipo: 'oa' })}>Solo andata</button>
+          </div>
+        </div>
+        <div className={s.tipo === 'ar' ? 'grid2 mt' : 'mt'}>
+          <div><label className="f">Andata</label><input type="date" value={s.andata} onChange={e => up({ andata: e.target.value })} /></div>
+          {s.tipo === 'ar' && <div><label className="f">Ritorno</label><input type="date" value={s.ritorno} min={s.andata} onChange={e => up({ ritorno: e.target.value })} /></div>}
+        </div>
+        <div className="quick">
+          <button onClick={() => { const f = nextWeekday(5); up({ andata: f, ritorno: addDays(f, 2), tipo: 'ar' }); }}>Prossimo weekend (ven–dom)</button>
+          {s.andata && s.tipo === 'ar' && [2, 3, 4, 7].map(n => <button key={n} onClick={() => up({ ritorno: addDays(s.andata, n) })}>+{n} gg</button>)}
+        </div>
+        {dateErr && <div className="banner mt">Il ritorno è prima dell'andata.</div>}
+        <div className="grid2 mt">
+          <div><label className="f">Adulti</label><input type="number" min="1" max="9" value={s.adulti} onChange={e => up({ adulti: Math.max(1, parseInt(e.target.value) || 1) })} /></div>
+          <div><label className="f">Date flessibili (Kayak)</label>
+            <select value={s.flex} onChange={e => up({ flex: parseInt(e.target.value) })}>
+              <option value={0}>Date esatte</option><option value={1}>± 1 giorno</option><option value={2}>± 2 giorni</option><option value={3}>± 3 giorni</option>
+            </select></div>
+        </div>
+        <div className="mt"><label className="f">Nome viaggio</label><input value={s.nome} placeholder="Es. Weekend con gli amici" onChange={e => up({ nome: e.target.value })} /></div>
+        <div className="row mt">
+          <button className="btn" disabled={!s.origini.length || (!s.ovunque && !s.destinazioni.length)} onClick={onSaveTrip}>{trip ? '💾 Aggiorna viaggio' : '💾 Salva viaggio'}</button>
+          <span className="mut small">Salvi la ricerca e lo storico dei prezzi su Firebase</span>
+        </div>
+      </div>
+
+      {!valid ? (
+        <div className="card empty">Inserisci partenza, destinazione e date per generare i link di ricerca.</div>
+      ) : s.ovunque ? (
+        <div className="combos">
+          {s.origini.map(o => (
+            <div key={o} className="card combo">
+              <div className="h"><div><b>{o} → Ovunque</b><div className="mut small">{apName(o)} · {fmtD(s.andata)}{ret ? ' – ' + fmtD(ret) : ''}</div></div></div>
+              <div className="links">{buildAnywhereLinks(s, o).map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div>
+              <div className="mut small">Trovata una meta? Aggiungila in "A" per tracciarne il prezzo.</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          {(s.origini.length > 1 || s.destinazioni.length > 1) && (
+            <div className="card">
+              <div className="row"><b>Ricerca combinata</b><span className="mut small">tutti gli aeroporti in un'unica ricerca</span></div>
+              <div className="links" style={{ marginTop: 8, marginBottom: 0 }}><a className="lk cmb" href={buildCombinedKayak(s)} target="_blank" rel="noopener">Kayak: {s.origini.join(',')} → {s.destinazioni.join(',')}</a></div>
+            </div>
+          )}
+          <div className="mut small" style={{ margin: '4px 2px 8px' }}>{fmtD(s.andata)}{ret ? ' → ' + fmtD(ret) : ' · solo andata'} · {s.adulti} {s.adulti > 1 ? 'adulti' : 'adulto'} · ordinate per ultimo prezzo registrato</div>
+          <div className="combos">
+            {combos.map(c => (
+              <div key={c.o + c.d} className="card combo">
+                <div className="h">
+                  <div><b style={{ fontSize: 17 }}>{c.o} → {c.d}</b><div className="mut small">{apName(c.o)} → {apName(c.d)}</div></div>
+                  <div>{c.last ? <><div className="price">{eur(c.last.pp)}</div><div className="mut small" style={{ textAlign: 'right' }}>a pers.{c.prev ? ' · ' : ''}<Trend last={c.last} prev={c.prev} /></div><div className="mut small" style={{ textAlign: 'right' }}>min {eur(c.min)} · {c.ps.length} rilev.</div></> : <span className="badge b-mut">nessun prezzo</span>}</div>
+                </div>
+                <div className="links">{buildLinks(s, c.o, c.d).map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div>
+                <button className="btn sec small full" onClick={() => onRegister({ origine: c.o, destinazione: c.d, andata: s.andata, ritorno: ret, adulti: s.adulti })}>+ Registra prezzo trovato</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PriceModal({ draft, onClose, onSave }) {
+  const [f, setF] = useState({ prezzo: '', base: 'pp', fonte: 'Google Flights', compagnia: '', scali: 'Diretto', orari: '', bagaglio: 'Solo zaino', note: '', link: '', ...draft, prezzo: draft.id ? String(draft.pp) : '', adulti: draft.adulti || 1 });
+  const up = p => setF({ ...f, ...p });
+  const num = parseFloat(String(f.prezzo).replace(',', '.'));
+  const ad = Math.max(1, parseInt(f.adulti) || 1);
+  const pp = isNaN(num) ? null : (f.base === 'pp' ? num : num / ad);
+  const save = () => {
+    if (pp == null || !f.origine || !f.destinazione) return alert('Inserisci tratta e prezzo');
+    onSave({
+      id: f.id || uid(), tripId: f.tripId, origine: f.origine.toUpperCase().trim(), destinazione: f.destinazione.toUpperCase().trim(),
+      andata: f.andata || '', ritorno: f.ritorno || '', adulti: ad, pp: Math.round(pp * 100) / 100, tot: Math.round(pp * ad * 100) / 100,
+      fonte: f.fonte, compagnia: f.compagnia, scali: f.scali, orari: f.orari, bagaglio: f.bagaglio, note: f.note, link: f.link, ts: f.ts || Date.now()
+    });
+  };
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h2>{f.id ? 'Modifica prezzo' : 'Registra prezzo'}</h2>
+        <div className="grid2">
+          <div><label className="f">Da</label><input value={f.origine} onChange={e => up({ origine: e.target.value })} /></div>
+          <div><label className="f">A</label><input value={f.destinazione} onChange={e => up({ destinazione: e.target.value })} /></div>
+          <div><label className="f">Andata</label><input type="date" value={f.andata} onChange={e => up({ andata: e.target.value })} /></div>
+          <div><label className="f">Ritorno</label><input type="date" value={f.ritorno} onChange={e => up({ ritorno: e.target.value })} /></div>
+        </div>
+        <div className="grid3 mt">
+          <div style={{ gridColumn: 'span 1' }}><label className="f">Prezzo €</label><input inputMode="decimal" autoFocus value={f.prezzo} placeholder="0,00" onChange={e => up({ prezzo: e.target.value })} /></div>
+          <div><label className="f">Riferito a</label><select value={f.base} onChange={e => up({ base: e.target.value })}><option value="pp">A persona</option><option value="tot">Totale</option></select></div>
+          <div><label className="f">Adulti</label><input type="number" min="1" value={f.adulti} onChange={e => up({ adulti: e.target.value })} /></div>
+        </div>
+        {pp != null && <div className="mut small" style={{ marginTop: 6 }}>= <b>{eur(pp)}</b> a persona · <b>{eur(pp * ad)}</b> totale</div>}
+        <div className="grid2 mt">
+          <div><label className="f">Fonte</label><select value={f.fonte} onChange={e => up({ fonte: e.target.value })}>{FONTI.map(x => <option key={x}>{x}</option>)}</select></div>
+          <div><label className="f">Compagnia</label><input value={f.compagnia} placeholder="Es. Ryanair" onChange={e => up({ compagnia: e.target.value })} /></div>
+          <div><label className="f">Scali</label><select value={f.scali} onChange={e => up({ scali: e.target.value })}><option>Diretto</option><option>1 scalo</option><option>2+ scali</option></select></div>
+          <div><label className="f">Bagaglio</label><select value={f.bagaglio} onChange={e => up({ bagaglio: e.target.value })}><option>Solo zaino</option><option>Trolley in cabina</option><option>Bagaglio da stiva</option></select></div>
+        </div>
+        <div className="mt"><label className="f">Orari</label><input value={f.orari} placeholder="Es. 06:30–09:10 / 20:15–22:50" onChange={e => up({ orari: e.target.value })} /></div>
+        <div className="mt"><label className="f">Link offerta</label><input value={f.link} placeholder="Incolla l'URL della pagina" onChange={e => up({ link: e.target.value })} /></div>
+        <div className="mt"><label className="f">Note</label><input value={f.note} onChange={e => up({ note: e.target.value })} /></div>
+        <div className="row mt"><button className="btn ghost" onClick={onClose}>Annulla</button><div className="sp" /><button className="btn" onClick={save}>Salva</button></div>
+      </div>
+    </div>
+  );
+}
+
+function PriceChart({ ps, target }) {
+  if (!ps.length) return <div className="empty">Nessun prezzo registrato. Apri la ricerca e usa "Registra prezzo trovato".</div>;
+  const W = 640, H = 260, L = 52, R = 12, T = 12, B = 28;
+  const series = {};
+  ps.forEach(p => { const k = `${p.origine}→${p.destinazione}${p.andata ? ' ' + fmtDs(p.andata) : ''}${p.ritorno ? '–' + fmtDs(p.ritorno) : ''}`; (series[k] = series[k] || []).push(p); });
+  const keys = Object.keys(series);
+  let x0 = Math.min(...ps.map(p => p.ts)), x1 = Math.max(...ps.map(p => p.ts));
+  if (x1 - x0 < 3600000) { x0 -= 43200000; x1 += 43200000; }
+  const vals = ps.map(p => p.pp).concat(target ? [target] : []);
+  let y0 = Math.min(...vals), y1 = Math.max(...vals);
+  const pad = Math.max((y1 - y0) * 0.12, 5); y0 = Math.max(0, y0 - pad); y1 = y1 + pad;
+  const X = t => L + (t - x0) / (x1 - x0) * (W - L - R);
+  const Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  const yt = [0, 1, 2, 3].map(i => y0 + (y1 - y0) * i / 3);
+  const xt = [0, 1, 2, 3].map(i => x0 + (x1 - x0) * i / 3);
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+        {yt.map((v, i) => <g key={i}><line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="#e2e8f0" /><text x={L - 6} y={Y(v) + 4} fontSize="14" textAnchor="end" fill="#64748b">{Math.round(v)}€</text></g>)}
+        {xt.map((t, i) => <text key={i} x={X(t)} y={H - 8} fontSize="14" textAnchor={i === 0 ? 'start' : i === 3 ? 'end' : 'middle'} fill="#64748b">{new Date(t).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}</text>)}
+        {target && <g><line x1={L} x2={W - R} y1={Y(target)} y2={Y(target)} stroke="#16a34a" strokeDasharray="5 4" /><text x={W - R} y={Y(target) - 4} fontSize="14" textAnchor="end" fill="#16a34a">obiettivo {eur(target)}</text></g>}
+        {keys.map((k, i) => {
+          const arr = series[k].slice().sort((a, b) => a.ts - b.ts); const c = COLORS[i % COLORS.length];
+          return <g key={k}>
+            {arr.length > 1 && <polyline fill="none" stroke={c} strokeWidth="2.5" strokeLinejoin="round" points={arr.map(p => `${X(p.ts)},${Y(p.pp)}`).join(' ')} />}
+            {arr.map(p => <circle key={p.id} cx={X(p.ts)} cy={Y(p.pp)} r="4" fill="#fff" stroke={c} strokeWidth="2"><title>{k}: {eur(p.pp)} · {fmtTs(p.ts)} · {p.fonte}</title></circle>)}
+          </g>;
+        })}
+      </svg>
+      <div className="legend">{keys.map((k, i) => <span key={k}><i style={{ background: COLORS[i % COLORS.length] }} />{k}</span>)}</div>
+    </div>
+  );
+}
+
+function TripsTab({ data, onOpen }) {
+  const [arch, setArch] = useState(false);
+  const prezzi = Object.values(data.prezzi || {});
+  const trips = Object.values(data.viaggi || {}).filter(t => !!t.archiviato === arch).sort((a, b) => (a.andata || '9').localeCompare(b.andata || '9'));
+  return (
+    <div>
+      <div className="row" style={{ marginBottom: 12 }}>
+        <div className="seg"><button className={!arch ? 'act' : ''} onClick={() => setArch(false)}>Attivi</button><button className={arch ? 'act' : ''} onClick={() => setArch(true)}>Archiviati</button></div>
+      </div>
+      {!trips.length && <div className="card empty">{arch ? 'Nessun viaggio archiviato.' : 'Nessun viaggio salvato. Crea una ricerca e premi "Salva viaggio".'}</div>}
+      {trips.map(t => {
+        const st = tripStats(t.id, prezzi); const dd = daysTo(t.andata);
+        const hit = t.target && st.best && st.best.last.pp <= t.target;
+        return (
+          <div key={t.id} className="card tripcard" onClick={() => onOpen(t.id)}>
+            <div className="row">
+              <b style={{ fontSize: 16 }}>{t.nome}</b>
+              {hit && <span className="badge b-ok">🎯 sotto obiettivo</span>}
+              {dd != null && dd < 0 && !t.archiviato && <span className="badge b-mut">passato</span>}
+              <div className="sp" />
+              {dd != null && dd >= 0 && <span className="badge b-teal">tra {dd} gg</span>}
+            </div>
+            <div className="mut small" style={{ marginTop: 4 }}>{t.origini.join(' / ')} → {t.ovunque ? 'Ovunque' : t.destinazioni.join(' / ')} · {fmtD(t.andata)}{t.ritorno ? ' – ' + fmtD(t.ritorno) : ''} · {t.adulti} pax</div>
+            <div className="stats">
+              <div className="stat"><span>Migliore ora</span><b>{st.best ? eur(st.best.last.pp) : '—'}</b>{st.best && <span style={{ textTransform: 'none' }}>{st.best.last.origine}→{st.best.last.destinazione} <Trend last={st.best.last} prev={st.best.prev} /></span>}</div>
+              <div className="stat"><span>Minimo visto</span><b>{eur(st.minEver)}</b></div>
+              <div className="stat"><span>Rilevazioni</span><b>{st.ps.length}</b>{st.ps.length > 0 && <span style={{ textTransform: 'none' }}>ult. {fmtTs(st.ps[st.ps.length - 1].ts)}</span>}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRegister, onDelete }) {
+  const prezzi = Object.values(data.prezzi || {});
+  const st = tripStats(trip.id, prezzi);
+  const [nome, setNome] = useState(trip.nome); const [target, setTarget] = useState(trip.target || ''); const [note, setNote] = useState(trip.note || '');
+  useEffect(() => { setNome(trip.nome); setTarget(trip.target || ''); setNote(trip.note || ''); }, [trip.id]);
+  const saveField = p => store.update({ [`viaggi/${trip.id}`]: { ...trip, ...p, aggiornato: Date.now() } });
+  const dd = daysTo(trip.andata);
+  return (
+    <div>
+      <button className="back" onClick={onBack}>‹ Viaggi</button>
+      <div className="card">
+        <div className="row">
+          <h2 style={{ margin: 0 }}>{trip.nome}</h2>
+          {trip.archiviato && <span className="badge b-mut">archiviato</span>}
+          <div className="sp" />
+          {dd != null && dd >= 0 && <span className="badge b-teal">tra {dd} gg</span>}
+        </div>
+        <div className="mut small" style={{ marginTop: 4 }}>{trip.origini.join(' / ')} → {trip.ovunque ? 'Ovunque' : trip.destinazioni.join(' / ')} · {fmtD(trip.andata)}{trip.ritorno ? ' – ' + fmtD(trip.ritorno) : ' (solo andata)'} · {trip.adulti} pax</div>
+        <div className="row mt">
+          <button className="btn" onClick={onOpenSearch}>🔎 Apri ricerca</button>
+          <button className="btn sec" onClick={() => onRegister()}>+ Prezzo</button>
+          <div className="sp" />
+          <button className="btn ghost small" onClick={() => saveField({ archiviato: !trip.archiviato })}>{trip.archiviato ? 'Ripristina' : 'Archivia'}</button>
+          <button className="btn danger small" onClick={onDelete}>Elimina</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>Andamento prezzi (a persona)</h3>
+        <PriceChart ps={st.ps} target={trip.target ? Number(trip.target) : null} />
+      </div>
+
+      {st.groups.length > 0 && (
+        <div className="card">
+          <h3>Riepilogo per tratta</h3>
+          <div className="tblwrap"><table>
+            <thead><tr><th>Tratta</th><th className="num">Ultimo</th><th className="num">Min</th><th className="num">Max</th><th className="num">N.</th></tr></thead>
+            <tbody>{st.groups.map(g => (
+              <tr key={g.k}>
+                <td><b>{g.last.origine}→{g.last.destinazione}</b><div className="mut small">{fmtDs(g.last.andata)}{g.last.ritorno ? '–' + fmtDs(g.last.ritorno) : ''}</div></td>
+                <td className="num"><b>{eur(g.last.pp)}</b><div><Trend last={g.last} prev={g.prev} /></div></td>
+                <td className="num">{eur(g.min)}</td><td className="num">{eur(g.max)}</td><td className="num">{g.n}</td>
+              </tr>))}</tbody>
+          </table></div>
+        </div>
+      )}
+
+      <div className="card">
+        <h3>Impostazioni viaggio</h3>
+        <label className="f">Nome</label><input value={nome} onChange={e => setNome(e.target.value)} onBlur={() => nome.trim() && nome !== trip.nome && saveField({ nome: nome.trim() })} />
+        <div className="mt"><label className="f">Prezzo obiettivo a persona (€)</label><input inputMode="decimal" value={target} placeholder="Es. 80" onChange={e => setTarget(e.target.value)} onBlur={() => { const v = parseFloat(String(target).replace(',', '.')); saveField({ target: isNaN(v) ? null : v }); }} /></div>
+        <div className="mt"><label className="f">Note</label><textarea rows="3" value={note} onChange={e => setNote(e.target.value)} onBlur={() => note !== (trip.note || '') && saveField({ note })} /></div>
+      </div>
+
+      <div className="card">
+        <h3>Storico rilevazioni</h3>
+        {!st.ps.length ? <div className="empty">Ancora nessuna rilevazione.</div> : (
+          <div className="tblwrap"><table>
+            <thead><tr><th>Quando</th><th>Tratta</th><th className="num">€/pers.</th><th>Dettagli</th><th></th></tr></thead>
+            <tbody>{st.ps.slice().reverse().map(p => (
+              <tr key={p.id}>
+                <td className="small">{fmtTs(p.ts)}</td>
+                <td><b>{p.origine}→{p.destinazione}</b><div className="mut small">{fmtDs(p.andata)}{p.ritorno ? '–' + fmtDs(p.ritorno) : ''}</div></td>
+                <td className="num"><b>{eur(p.pp)}</b><div className="mut small">tot {eur(p.tot)}</div></td>
+                <td className="small">{p.fonte}{p.compagnia ? ' · ' + p.compagnia : ''}<div className="mut">{[p.scali, p.bagaglio, p.orari].filter(Boolean).join(' · ')}</div>{p.note && <div className="mut">{p.note}</div>}{p.link && <a href={p.link} target="_blank" rel="noopener">apri offerta</a>}</td>
+                <td className="num"><button className="btn ghost small" onClick={() => onEditPrice(p)}>✎</button> <button className="btn danger small" onClick={() => { if (confirm('Eliminare questa rilevazione?')) store.update({ [`prezzi/${p.id}`]: null }); }}>×</button></td>
+              </tr>))}</tbody>
+          </table></div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SettingsTab({ data, store, onCheckUpdate }) {
+  const imp = data.impostazioni || {};
+  const [checking, setChecking] = useState(false); const [msg, setMsg] = useState('');
+  const fileRef = useRef(null);
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify({ viaggi: data.viaggi, prezzi: data.prezzi, impostazioni: data.impostazioni }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `voli-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  };
+  const importJson = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = () => { try { const o = JSON.parse(r.result); if (confirm('Sostituire tutti i dati con il backup?')) store.replaceAll(o); } catch (err) { alert('File non valido'); } };
+    r.readAsText(file); e.target.value = '';
+  };
+  return (
+    <div>
+      {!FB_ON && <div className="banner"><b>Modalità locale.</b> I dati restano solo su questo dispositivo. Per sincronizzarli tra Mac e telefono incolla la config Firebase in <code>FIREBASE_CONFIG</code> dentro index.html.</div>}
+      <div className="card">
+        <h3>Preferenze</h3>
+        <label className="f">I miei aeroporti di partenza</label>
+        <AirportPicker value={imp.origini || []} onChange={v => store.update({ 'impostazioni/origini': v })} placeholder="Es. BLQ, VRN, BGY" />
+        <div className="mt" style={{ maxWidth: 160 }}><label className="f">Adulti predefiniti</label><input type="number" min="1" value={imp.adulti || 1} onChange={e => store.update({ 'impostazioni/adulti': Math.max(1, parseInt(e.target.value) || 1) })} /></div>
+      </div>
+      <div className="card">
+        <h3>Dati</h3>
+        <div className="mut small" style={{ marginBottom: 10 }}>Archivio: {FB_ON ? `Firebase · ${store.status}` : 'locale (questo browser)'} · {Object.keys(data.viaggi || {}).length} viaggi · {Object.keys(data.prezzi || {}).length} rilevazioni</div>
+        <div className="row"><button className="btn sec" onClick={exportJson}>⬇ Esporta backup</button><button className="btn ghost" onClick={() => fileRef.current.click()}>⬆ Importa backup</button>
+          <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={importJson} /></div>
+      </div>
+      <div className="card">
+        <h3>Aggiorna app</h3>
+        <div className="row"><span>Versione installata <b>{APP_VERSION}</b></span><div className="sp" />
+          <button className="btn" disabled={checking} onClick={async () => { setChecking(true); setMsg(''); const v = await checkUpdate().catch(() => null); setChecking(false); if (v) onCheckUpdate(v); else setMsg('Hai già l\'ultima versione.'); }}>{checking ? 'Controllo…' : 'Controlla aggiornamenti'}</button>
+          <button className="btn ghost" onClick={() => hardReload()}>Ricarica</button></div>
+        {msg && <div className="mut small" style={{ marginTop: 8 }}>{msg}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ============ APP ============ */
+const blankSearch = (imp = {}) => ({ origini: imp.origini || [], destinazioni: [], ovunque: false, tipo: 'ar', andata: '', ritorno: '', adulti: imp.adulti || 1, flex: 0, tripId: null, nome: '' });
+const defaultName = s => `${s.origini.join('/')} → ${s.ovunque ? 'Ovunque' : s.destinazioni.join('/')}${s.andata ? ' · ' + fmtDs(s.andata) : ''}`;
+
+function App() {
+  const store = useStore(); const { data } = store;
+  const [tab, setTab] = useState('cerca');
+  const [tripView, setTripView] = useState(null);
+  const [search, setSearch] = useState(blankSearch());
+  const [draft, setDraft] = useState(null);
+  const [newVer, setNewVer] = useState(null);
+  const initDone = useRef(false);
+
+  useEffect(() => {
+    if (initDone.current || !store.ready) return;
+    initDone.current = true;
+    const imp = data.impostazioni || {};
+    setSearch(s => (s.origini.length ? s : { ...s, origini: imp.origini || [], adulti: imp.adulti || s.adulti }));
+  }, [store.ready, data.impostazioni]);
+
+  useEffect(() => {
+    const run = () => checkUpdate().then(v => v && setNewVer(v)).catch(() => {});
+    run();
+    const t = setInterval(run, 10 * 60 * 1000);
+    const vis = () => { if (document.visibilityState === 'visible') run(); };
+    document.addEventListener('visibilitychange', vis);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', vis); };
+  }, []);
+
+  const saveTrip = () => {
+    const s = search; const base = (s.tripId && data.viaggi[s.tripId]) || {};
+    const t = {
+      ...base, id: base.id || uid(), nome: (s.nome || '').trim() || base.nome || defaultName(s),
+      origini: s.origini, destinazioni: s.ovunque ? [] : s.destinazioni, ovunque: s.ovunque, tipo: s.tipo, andata: s.andata,
+      ritorno: s.tipo === 'ar' ? s.ritorno : '', adulti: s.adulti, flex: s.flex, target: base.target || null, note: base.note || '',
+      archiviato: base.archiviato || false, creato: base.creato || Date.now(), aggiornato: Date.now()
+    };
+    store.update({ [`viaggi/${t.id}`]: t });
+    setSearch(x => ({ ...x, tripId: t.id, nome: t.nome }));
+    return t;
+  };
+  const register = d => { let tripId = search.tripId; if (!tripId || !data.viaggi[tripId]) tripId = saveTrip().id; setDraft({ ...d, tripId }); };
+  const savePrice = p => { store.update({ [`prezzi/${p.id}`]: p }); setDraft(null); };
+  const openSearchFromTrip = t => {
+    setSearch({ origini: t.origini || [], destinazioni: t.destinazioni || [], ovunque: !!t.ovunque, tipo: t.tipo || 'ar', andata: t.andata || '', ritorno: t.ritorno || '', adulti: t.adulti || 1, flex: t.flex || 0, tripId: t.id, nome: t.nome });
+    setTab('cerca'); window.scrollTo(0, 0);
+  };
+  const deleteTrip = t => {
+    if (!confirm(`Eliminare "${t.nome}" e tutte le sue rilevazioni?`)) return;
+    const m = { [`viaggi/${t.id}`]: null };
+    Object.values(data.prezzi || {}).filter(p => p.tripId === t.id).forEach(p => { m[`prezzi/${p.id}`] = null; });
+    store.update(m); setTripView(null);
+    if (search.tripId === t.id) setSearch(s => ({ ...s, tripId: null }));
+  };
+
+  const trip = tripView ? data.viaggi[tripView] : null;
+  const st = store.status;
+  const nActive = Object.values(data.viaggi || {}).filter(t => !t.archiviato).length;
+
+  return (
+    <>
+      <header>
+        <div className="top">
+          <div className="brand">✈ Voli</div>
+          <div className="status"><span className={'dot ' + (st === 'online' ? 'on' : st.startsWith('errore') ? 'err' : '')} />{st}</div>
+        </div>
+        <nav>
+          <button className={tab === 'cerca' ? 'act' : ''} onClick={() => setTab('cerca')}>Cerca</button>
+          <button className={tab === 'viaggi' ? 'act' : ''} onClick={() => { setTab('viaggi'); setTripView(null); }}>Viaggi{nActive ? ` (${nActive})` : ''}</button>
+          <button className={tab === 'imp' ? 'act' : ''} onClick={() => setTab('imp')}>Impostazioni</button>
+        </nav>
+      </header>
+      <main>
+        {tab === 'cerca' && <SearchTab search={search} setSearch={setSearch} data={data} onSaveTrip={saveTrip} onRegister={register} onNew={() => setSearch(blankSearch(data.impostazioni))} />}
+        {tab === 'viaggi' && !trip && <TripsTab data={data} onOpen={id => { setTripView(id); window.scrollTo(0, 0); }} />}
+        {tab === 'viaggi' && trip && <TripDetail trip={trip} data={data} store={store} onBack={() => setTripView(null)} onOpenSearch={() => openSearchFromTrip(trip)}
+          onEditPrice={p => setDraft(p)} onDelete={() => deleteTrip(trip)}
+          onRegister={() => setDraft({ tripId: trip.id, origine: trip.origini[0] || '', destinazione: trip.destinazioni[0] || '', andata: trip.andata, ritorno: trip.ritorno, adulti: trip.adulti })} />}
+        {tab === 'imp' && <SettingsTab data={data} store={store} onCheckUpdate={v => setNewVer(v)} />}
+        <div className="ver">Voli v{APP_VERSION}</div>
+      </main>
+      {draft && <PriceModal draft={draft} onClose={() => setDraft(null)} onSave={savePrice} />}
+      {newVer && (
+        <div className="modal-bg pop">
+          <div className="modal">
+            <div className="big">🚀</div>
+            <h2>Nuova versione disponibile</h2>
+            <p className="mut">Versione <b>{newVer}</b> (installata {APP_VERSION})</p>
+            <button className="btn full" onClick={() => hardReload(newVer)}>Aggiorna ora</button>
+            <button className="btn ghost full" style={{ marginTop: 8 }} onClick={() => setNewVer(null)}>Più tardi</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
