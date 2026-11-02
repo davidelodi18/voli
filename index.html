@@ -48,6 +48,41 @@ details.more summary::-webkit-details-marker{display:none}
 .combo-best .tot{font-size:21px;font-weight:800;color:var(--teal);margin-top:6px}
 .sub{margin-top:12px}
 .sub .sh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.itin{padding:0;overflow:hidden}
+.itin.best{border:2px solid var(--teal2)}
+.itin .ih{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:14px 14px 10px}
+.icity{font-size:19px;font-weight:800;line-height:1.15}
+.icode{font-size:12px;color:var(--mut);font-weight:700;letter-spacing:.04em;margin-top:2px}
+.iprice{font-size:26px;font-weight:900;color:var(--teal);line-height:1;text-align:right}
+.iprice-s{font-size:11px;color:var(--mut);text-align:right;margin-top:3px}
+.ibadge{display:inline-block;margin:0 14px 8px;background:var(--teal);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.03em}
+.lgblock{border-top:1px dashed #cbd5e1;padding:10px 14px 12px}
+.lgh{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--mut);margin-bottom:6px}
+.lgh .lgtag{color:#fff;background:#0f766e;border-radius:6px;padding:2px 7px}
+.lgh .lgtag.r{background:#7c3aed}
+.leg2{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.leg2 .tm{font-size:22px;font-weight:800;line-height:1}
+.leg2 .tm sup{font-size:11px;color:#b45309;margin-left:2px}
+.leg2 .ap{font-size:12px;color:var(--mut);font-weight:800;margin-top:3px;letter-spacing:.04em}
+.leg2 .r{text-align:right}
+.lmid{text-align:center;min-width:0}
+.lline{height:2px;background:#cbd5e1;position:relative;margin:5px 4px}
+.lline::before,.lline::after{content:'';position:absolute;top:-3px;width:8px;height:8px;border-radius:50%;background:#cbd5e1}
+.lline::before{left:-4px}.lline::after{right:-4px}
+.lline.stop i{position:absolute;left:50%;top:-4px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#fff;border:2px solid #d97706}
+.ldur{font-size:11px;color:var(--mut);font-weight:600}
+.lstop{font-size:11px;color:var(--ok);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lstop.s{color:#b45309}
+.lgair{font-size:13px;font-weight:700;margin-top:6px}
+.lgair span{font-weight:500;color:var(--mut)}
+.ifoot{padding:10px 14px 14px;border-top:1px solid var(--line);background:#fafafa}
+.alt{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.alt.ko{opacity:.5}
+.alt .at{font-weight:800}
+.alt .ap2{font-weight:800;color:var(--teal);white-space:nowrap}
+.secttl{font-size:13px;font-weight:800;color:var(--mut);letter-spacing:.05em;text-transform:uppercase;margin:16px 2px 8px}
+details.card > summary{cursor:pointer;font-weight:800;list-style:none}
+details.card > summary::-webkit-details-marker{display:none}
 .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(15,23,42,.08);margin-bottom:12px}
 label.f{display:block;font-size:11px;font-weight:700;color:var(--mut);margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em}
 input,select,textarea{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
@@ -126,7 +161,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -399,6 +434,80 @@ function ScanList({ sc, title }) {
   );
 }
 
+function LegLine({ f, from, to }) {
+  return (
+    <div className="leg2">
+      <div><div className="tm">{f.dep || '?'}</div><div className="ap">{from}</div></div>
+      <div className="lmid">
+        <div className="ldur">{f.dur}</div>
+        <div className={'lline' + (f.stops ? ' stop' : '')}>{f.stops ? <i /> : null}</div>
+        <div className={'lstop' + (f.stops ? ' s' : '')}>{f.stops === 0 ? 'diretto' : `${f.stops} scal${f.stops > 1 ? 'i' : 'o'}${f.via ? ' · ' + f.via : ''}`}</div>
+      </div>
+      <div className="r"><div className="tm">{f.arr || '?'}{f.night ? <sup>+1</sup> : null}</div><div className="ap">{to}</div></div>
+    </div>
+  );
+}
+function AltRow({ f }) {
+  return (
+    <div className={'alt' + (f.ok === false ? ' ko' : '')}>
+      <div style={{ minWidth: 0 }}>
+        <span className="at">{f.dep}→{f.arr}{f.night ? '+1' : ''}</span> <span className="mut small">{f.dur}</span>
+        <div className="small">{f.airline} · <span className="mut">{f.stops === 0 ? 'diretto' : `${f.stops} scalo${f.via ? ' ' + f.via : ''}`}{f.sep ? ' · biglietti separati' : ''}{f.ok === false ? ' · scomodo' : ''}</span></div>
+      </div>
+      <div className="ap2">{eur(f.pp)}</div>
+    </div>
+  );
+}
+function ItinCard({ o, d, sc, andata, ritorno, best, children }) {
+  const sel = sc.sel || (sc.voli ? Object.values(sc.voli).slice().sort(okThenPrice)[0] : null);
+  const rets = sc.ritorni ? Object.values(sc.ritorni).slice().sort(okThenPrice) : [];
+  const r = rets.find(x => x.ok !== false) || null;
+  const total = r ? r.pp : (sel ? sel.pp : null);
+  const voli = sc.voli ? Object.values(sc.voli).slice().sort(okThenPrice) : [];
+  return (
+    <div className={'card itin' + (best ? ' best' : '')}>
+      <div className="ih">
+        <div style={{ minWidth: 0 }}>
+          <div className="icity">da {apName(o)}</div>
+          <div className="icode">{o} → {d} · {apName(d)}</div>
+        </div>
+        <div><div className="iprice">{eur(total)}</div><div className="iprice-s">a persona · A/R</div></div>
+      </div>
+      {best && <span className="ibadge">💰 IL PIÙ CONVENIENTE</span>}
+      {sel && (
+        <div className="lgblock">
+          <div className="lgh"><span className="lgtag">🛫 ANDATA</span><span>{fmtD(andata).toUpperCase()}</span></div>
+          <LegLine f={sel} from={o} to={d} />
+          <div className="lgair">{sel.airline}</div>
+        </div>
+      )}
+      {r && (
+        <div className="lgblock">
+          <div className="lgh"><span className="lgtag r">🛬 RITORNO</span><span>{fmtD(ritorno).toUpperCase()}</span></div>
+          <LegLine f={r} from={d} to={o} />
+          <div className="lgair">{r.airline}{r.sep ? <span> · biglietti separati</span> : null}</div>
+        </div>
+      )}
+      <div className="ifoot">
+        {sc.url && <a className="btn full" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }} href={sc.url} target="_blank" rel="noopener">Apri su Google Flights ↗</a>}
+        <details className="more" style={{ marginTop: 6 }}>
+          <summary>Altre opzioni di volo ▾</summary>
+          <div className="small b" style={{ marginTop: 6 }}>🛫 Andata {fmtDs(andata)} · {o} → {d}</div>
+          <div className="mut small">prezzo andata e ritorno minimo con quel volo</div>
+          {voli.map((f, i) => <AltRow key={i} f={f} />)}
+          {rets.length > 0 && <>
+            <div className="small b" style={{ marginTop: 12 }}>🛬 Ritorno {fmtDs(ritorno)} · {d} → {o}</div>
+            <div className="mut small">prezzo totale A/R{sel ? ` con l'andata delle ${sel.dep}` : ''}</div>
+            {rets.map((f, i) => <AltRow key={i} f={f} />)}
+          </>}
+        </details>
+        {children}
+        <div className="mut small" style={{ marginTop: 8 }}>🤖 Aggiornato {fmtTs(sc.ts)}{sc.sky && sc.sky.cheap ? ` · Skyscanner da ${eur(sc.sky.cheap)}` : ''}</div>
+      </div>
+    </div>
+  );
+}
+
 function HowSteps() {
   return (
     <div className="steps">
@@ -424,8 +533,9 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
       const ps = prezzi.filter(p => p.origine === o && p.destinazione === d && (p.andata || '') === (s.andata || '') && (p.ritorno || '') === (ret || '') && (!s.tripId || p.tripId === s.tripId)).sort((a, b) => a.ts - b.ts);
       return { o, d, ps, last: ps[ps.length - 1] || null, prev: ps.length > 1 ? ps[ps.length - 2] : null, min: ps.length ? Math.min(...ps.map(p => p.pp)) : null };
     }));
-    return list.sort((a, b) => (a.last ? a.last.pp : 1e9) - (b.last ? b.last.pp : 1e9));
-  }, [s, data.prezzi]);
+    const key = c => { const sc = s.tripId ? scanFor(data, s.tripId, c.o, c.d, s.andata, ret) : null; const t = sc ? bestTotalOf(sc) : null; return t != null ? t : (c.last ? c.last.pp : 1e9); };
+    return list.sort((a, b) => key(a) - key(b));
+  }, [s, data.prezzi, data.scan]);
 
   const [editing, setEditing] = useState(!valid);
   useEffect(() => { setEditing(!(s.tripId && valid)); }, [s.tripId]);
@@ -501,7 +611,7 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
       </div>
       )}
 
-      {valid && !howHidden && (
+      {valid && !howHidden && !(s.tripId && data.scan && data.scan[s.tripId]) && (
         <div className="card howto">
           <div className="row" style={{ marginBottom: 8 }}><b>Come funziona</b><div className="sp" /><button className="xbtn" onClick={hideHow} aria-label="Chiudi">×</button></div>
           <HowSteps />
@@ -529,22 +639,31 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
               <div className="links" style={{ marginTop: 8, marginBottom: 0 }}><a className="lk cmb" href={buildCombinedKayak(s)} target="_blank" rel="noopener">Kayak: {s.origini.join(',')} → {s.destinazioni.join(',')}</a></div>
             </div>
           )}
-          <div className="mut small" style={{ margin: '4px 2px 8px' }}>{fmtD(s.andata)}{ret ? ' → ' + fmtD(ret) : ' · solo andata'} · {s.adulti} {s.adulti > 1 ? 'adulti' : 'adulto'} · ordinate per ultimo prezzo registrato</div>
+          <div className="mut small" style={{ margin: '4px 2px 8px' }}>{fmtD(s.andata)}{ret ? ' → ' + fmtD(ret) : ' · solo andata'} · {s.adulti} {s.adulti > 1 ? 'adulti' : 'adulto'} · dalla più economica</div>
           <div className="combos">
-            {combos.map(c => (
+            {combos.map((c, ci) => {
+              const sc = s.tripId ? scanFor(data, s.tripId, c.o, c.d, s.andata, ret) : null;
+              const L = buildLinks(s, c.o, c.d); const main = L.filter(l => l.k === 'gf' || l.k === 'sky'); const rest = L.filter(l => l.k !== 'gf' && l.k !== 'sky');
+              const extra = <>
+                <details className="more"><summary>Controlla su altri siti ▾</summary>
+                  <div className="lgrid" style={{ marginTop: 4 }}>{main.map(l => <a key={l.k} className={'lk lbig ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}</div>
+                  <div className="links">{rest.map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div>
+                </details>
+                <button className="btn sec small full" style={{ marginTop: 6 }} onClick={() => onRegister({ origine: c.o, destinazione: c.d, andata: s.andata, ritorno: ret, adulti: s.adulti })}>+ Registra un prezzo a mano</button>
+              </>;
+              if (sc) return <ItinCard key={c.o + c.d} o={c.o} d={c.d} sc={sc} andata={s.andata} ritorno={ret} best={false}>{extra}</ItinCard>;
+              return (
               <div key={c.o + c.d} className="card combo">
                 <div className="h">
-                  <div><b style={{ fontSize: 17 }}>{c.o} → {c.d}</b><div className="mut small">{apName(c.o)} → {apName(c.d)}</div><div className="small b" style={{ color: 'var(--teal)', marginTop: 3 }}>📅 {fmtDs(s.andata)}{ret ? ' ⇄ ' + fmtDs(ret) + ' · A/R' : ' · solo andata'}</div></div>
-                  <div>{c.last ? <><div className="price">{eur(c.last.pp)}</div><div className="mut small" style={{ textAlign: 'right' }}>a pers.{c.prev ? ' · ' : ''}<Trend last={c.last} prev={c.prev} /></div><div className="mut small" style={{ textAlign: 'right' }}>min {eur(c.min)} · {c.ps.length} rilev.</div></> : <span className="badge b-mut">nessun prezzo</span>}</div>
+                  <div><div className="icity">da {apName(c.o)}</div><div className="icode">{c.o} → {c.d} · {apName(c.d)}</div><div className="small b" style={{ color: 'var(--teal)', marginTop: 4 }}>📅 {fmtDs(s.andata)}{ret ? ' ⇄ ' + fmtDs(ret) + ' · A/R' : ' · solo andata'}</div></div>
+                  <div>{c.last ? <><div className="price">{eur(c.last.pp)}</div><div className="mut small" style={{ textAlign: 'right' }}>a pers.</div></> : <span className="badge b-mut">nessun prezzo</span>}</div>
                 </div>
-                {s.tripId && <ScanList sc={scanFor(data, s.tripId, c.o, c.d, s.andata, ret)} />}
-                {(() => { const L = buildLinks(s, c.o, c.d); const main = L.filter(l => l.k === 'gf' || l.k === 'sky'); const rest = L.filter(l => l.k !== 'gf' && l.k !== 'sky'); return <>
-                  <div className="lgrid">{main.map(l => <a key={l.k} className={'lk lbig ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}</div>
-                  <details className="more"><summary>Altri siti e compagnie ▾</summary><div className="links" style={{ marginTop: 4 }}>{rest.map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div></details>
-                </>; })()}
+                <div className="lgrid">{main.map(l => <a key={l.k} className={'lk lbig ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}</div>
+                <details className="more"><summary>Altri siti e compagnie ▾</summary><div className="links" style={{ marginTop: 4 }}>{rest.map(l => <a key={l.k} className={'lk ' + l.g} href={l.url} target="_blank" rel="noopener">{l.label}</a>)}</div></details>
                 <button className="btn full" style={{ marginTop: 6 }} onClick={() => onRegister({ origine: c.o, destinazione: c.d, andata: s.andata, ritorno: ret, adulti: s.adulti })}>+ Registra prezzo trovato</button>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -653,12 +772,12 @@ function TripsTab({ data, onOpen, onSearch, onRegister }) {
               <div className="sp" />
               {dd != null && dd >= 0 && <span className="badge b-teal">tra {dd} gg</span>}
             </div>
-            <div className="mut small" style={{ marginTop: 4 }}>{t.origini.join(' / ')} → {t.ovunque ? 'Ovunque' : t.destinazioni.join(' / ')} · {fmtD(t.andata)}{t.ritorno ? ' – ' + fmtD(t.ritorno) : ''} · {t.adulti} pax</div>
+            <div className="mut small" style={{ marginTop: 4 }}>{fmtD(t.andata)}{t.ritorno ? ' → ' + fmtD(t.ritorno) : ' · solo andata'} · da {t.origini.map(apName).join(', ')} a {t.ovunque ? 'Ovunque' : t.destinazioni.map(apName).join(', ')}</div>
             {st.ps.length === 0 ? (
               <div className="mut small" style={{ marginTop: 10, lineHeight: 1.4 }}>Nessun prezzo registrato. Tocca <b>Cerca voli</b>, controlla i siti e registra il prezzo che trovi.</div>
             ) : (
             <div className="stats">
-              <div className="stat"><span>Migliore ora</span><b>{st.best ? eur(st.best.last.pp) : '—'}</b>{st.best && <span style={{ textTransform: 'none' }}>{st.best.last.origine}→{st.best.last.destinazione} <Trend last={st.best.last} prev={st.best.prev} /></span>}</div>
+              <div className="stat"><span>Migliore ora</span><b>{st.best ? eur(st.best.last.pp) : '—'}</b>{st.best && <span style={{ textTransform: 'none' }}>da {apName(st.best.last.origine)} <Trend last={st.best.last} prev={st.best.prev} /></span>}</div>
               <div className="stat"><span>Minimo visto</span><b>{eur(st.minEver)}</b></div>
               <div className="stat"><span>Rilevazioni</span><b>{st.ps.length}</b>{st.ps.length > 0 && <span style={{ textTransform: 'none' }}>ult. {fmtTs(st.ps[st.ps.length - 1].ts)}</span>}</div>
             </div>
@@ -693,90 +812,86 @@ function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRe
           <div className="sp" />
           {dd != null && dd >= 0 && <span className="badge b-teal">tra {dd} gg</span>}
         </div>
-        <div className="mut small" style={{ marginTop: 4 }}>{trip.origini.join(' / ')} → {trip.ovunque ? 'Ovunque' : trip.destinazioni.join(' / ')} · {fmtD(trip.andata)}{trip.ritorno ? ' – ' + fmtD(trip.ritorno) : ' (solo andata)'} · {trip.adulti} pax</div>
+        <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.5 }}>
+          <div>🛫 <b>Andata</b> {fmtD(trip.andata)} · da {trip.origini.map(apName).join(', ')}</div>
+          {trip.ritorno && <div>🛬 <b>Ritorno</b> {fmtD(trip.ritorno)} · da {trip.ovunque ? 'Ovunque' : trip.destinazioni.map(apName).join(', ')}</div>}
+          <div className="mut small">{trip.adulti} {trip.adulti > 1 ? 'adulti' : 'adulto'} · prezzi a persona</div>
+        </div>
         <div className="grid2 mt">
           <button className="btn" onClick={onOpenSearch}>🔎 Cerca voli</button>
-          <button className="btn sec" onClick={() => onRegister()}>+ Registra prezzo</button>
-        </div>
-        <div className="row" style={{ marginTop: 8, justifyContent: 'flex-end' }}>
-          <button className="btn ghost small" onClick={() => saveField({ archiviato: !trip.archiviato })}>{trip.archiviato ? 'Ripristina' : 'Archivia'}</button>
-          <button className="btn danger small" onClick={onDelete}>Elimina</button>
-        </div>
-      </div>
-
-      {!st.ps.length ? (
-        <div className="card howto">
-          <h3>Nessun prezzo ancora</h3>
-          <HowSteps />
-          <button className="btn full mt" onClick={onOpenSearch}>🔎 Cerca voli per questo viaggio</button>
-        </div>
-      ) : (
-      <>
-      <div className="card">
-        <h3>Andamento prezzi (a persona)</h3>
-        <PriceChart ps={st.ps} target={trip.target ? Number(trip.target) : null} />
-      </div>
-
-      <div className="card">
-        <h3>Riepilogo per tratta</h3>
-        <div className="plist">{st.groups.map(g => (
-          <div key={g.k} className="pi">
-            <div style={{ minWidth: 0 }}>
-              <b>{g.last.origine} → {g.last.destinazione}</b>
-              <div className="mut small">{fmtDs(g.last.andata)}{g.last.ritorno ? '–' + fmtDs(g.last.ritorno) : ''} · {g.n} rilev.</div>
-              <div className="mut small">min {eur(g.min)} · max {eur(g.max)}</div>
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div className="price" style={{ fontSize: 19 }}>{eur(g.last.pp)}</div>
-              <Trend last={g.last} prev={g.prev} />
-            </div>
-          </div>))}
+          <button className="btn sec" onClick={() => onRegister()}>+ Prezzo a mano</button>
         </div>
       </div>
 
       {(() => {
         const combos = (trip.origini || []).flatMap(o => (trip.destinazioni || []).filter(d => d !== o).map(d => ({ o, d, sc: scanFor(data, trip.id, o, d, trip.andata, trip.ritorno) }))).filter(x => x.sc);
-        if (!combos.length) return null;
-        combos.sort((a, b) => (bestTotalOf(a.sc) ?? 1e9) - (bestTotalOf(b.sc) ?? 1e9));
-        return (
-          <div className="card">
-            <h3>Voli trovati</h3>
-            {combos.map(x => <div key={x.o + x.d} style={{ marginBottom: 14 }}><ScanList sc={x.sc} title={`${x.o} → ${x.d} · ${apName(x.o)}`} /></div>)}
+        if (!combos.length) return st.ps.length ? null : (
+          <div className="card howto">
+            <h3>Nessun prezzo ancora</h3>
+            <HowSteps />
+            <button className="btn full mt" onClick={onOpenSearch}>🔎 Cerca voli per questo viaggio</button>
           </div>
         );
+        combos.sort((a, b) => (bestTotalOf(a.sc) ?? 1e9) - (bestTotalOf(b.sc) ?? 1e9));
+        return <>
+          <div className="secttl">✈ Le tue opzioni · dalla più economica</div>
+          {combos.map((x, i) => <ItinCard key={x.o + x.d} o={x.o} d={x.d} sc={x.sc} andata={trip.andata} ritorno={trip.ritorno} best={i === 0 && combos.length > 1} />)}
+        </>;
       })()}
 
-      <div className="card">
-        <h3>Storico rilevazioni</h3>
-        <div className="plist">{st.ps.slice().reverse().map(p => (
-          <div key={p.id} className="pi">
-            <div style={{ minWidth: 0 }}>
-              <b>{p.origine} → {p.destinazione}</b> <span className="mut small">{fmtDs(p.andata)}{p.ritorno ? '–' + fmtDs(p.ritorno) : ''}</span>
-              <div className="mut small">{fmtTs(p.ts)} · {p.fonte}{p.compagnia ? ' · ' + p.compagnia : ''}</div>
-              {[p.scali, p.bagaglio, p.orari].filter(Boolean).length > 0 && <div className="mut small">{[p.scali, p.bagaglio, p.orari].filter(Boolean).join(' · ')}</div>}
-              {p.note && <div className="mut small">{p.note}</div>}
-              {p.link && <a className="small" href={p.link} target="_blank" rel="noopener">Apri offerta ↗</a>}
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div className="b" style={{ fontSize: 16 }}>{eur(p.pp)}</div>
-              <div className="mut small">tot {eur(p.tot)}</div>
-              <div style={{ marginTop: 6, display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                <button className="btn ghost small" onClick={() => onEditPrice(p)}>✎</button>
-                <button className="btn danger small" onClick={() => { if (confirm('Eliminare questa rilevazione?')) store.update({ [`prezzi/${p.id}`]: null }); }}>×</button>
+      {st.ps.length > 0 && <>
+        <div className="secttl">📈 Andamento del prezzo</div>
+        <div className="card">
+          <div className="plist">{st.groups.map(g => (
+            <div key={g.k} className="pi">
+              <div style={{ minWidth: 0 }}>
+                <b>da {apName(g.last.origine)}</b>
+                <div className="mut small">{g.n} rilevazioni · min {eur(g.min)} · max {eur(g.max)}</div>
               </div>
-            </div>
-          </div>))}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div className="price" style={{ fontSize: 19 }}>{eur(g.last.pp)}</div>
+                <Trend last={g.last} prev={g.prev} />
+              </div>
+            </div>))}
+          </div>
+          <details className="more"><summary>Mostra grafico ▾</summary><PriceChart ps={st.ps} target={trip.target ? Number(trip.target) : null} /></details>
         </div>
-      </div>
-      </>
-      )}
 
-      <div className="card">
-        <h3>Impostazioni viaggio</h3>
-        <label className="f">Nome</label><input value={nome} onChange={e => setNome(e.target.value)} onBlur={() => nome.trim() && nome !== trip.nome && saveField({ nome: nome.trim() })} />
-        <div className="mt"><label className="f">Prezzo obiettivo a persona (€)</label><input inputMode="decimal" value={target} placeholder="Es. 80" onChange={e => setTarget(e.target.value)} onBlur={() => { const v = parseFloat(String(target).replace(',', '.')); saveField({ target: isNaN(v) ? null : v }); }} /></div>
-        <div className="mt"><label className="f">Note</label><textarea rows="3" value={note} onChange={e => setNote(e.target.value)} onBlur={() => note !== (trip.note || '') && saveField({ note })} /></div>
-      </div>
+        <details className="card">
+          <summary>🗂 Storico rilevazioni ({st.ps.length}) ▾</summary>
+          <div className="plist" style={{ marginTop: 8 }}>{st.ps.slice().reverse().map(p => (
+            <div key={p.id} className="pi">
+              <div style={{ minWidth: 0 }}>
+                <b>da {apName(p.origine)}</b> <span className="mut small">{fmtTs(p.ts)}</span>
+                {p.orari && <div className="small">{p.orari}</div>}
+                <div className="mut small">{p.fonte}{p.compagnia ? ' · ' + p.compagnia : ''}</div>
+                {p.note && <div className="mut small">{p.note}</div>}
+                {p.link && <a className="small" href={p.link} target="_blank" rel="noopener">Apri offerta ↗</a>}
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div className="b" style={{ fontSize: 16 }}>{eur(p.pp)}</div>
+                <div style={{ marginTop: 6, display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                  <button className="btn ghost small" onClick={() => onEditPrice(p)}>✎</button>
+                  <button className="btn danger small" onClick={() => { if (confirm('Eliminare questa rilevazione?')) store.update({ [`prezzi/${p.id}`]: null }); }}>×</button>
+                </div>
+              </div>
+            </div>))}
+          </div>
+        </details>
+      </>}
+
+      <details className="card">
+        <summary>⚙️ Impostazioni viaggio ▾</summary>
+        <div style={{ marginTop: 10 }}>
+          <label className="f">Nome</label><input value={nome} onChange={e => setNome(e.target.value)} onBlur={() => nome.trim() && nome !== trip.nome && saveField({ nome: nome.trim() })} />
+          <div className="mt"><label className="f">Prezzo obiettivo a persona (€)</label><input inputMode="decimal" value={target} placeholder="Es. 80" onChange={e => setTarget(e.target.value)} onBlur={() => { const v = parseFloat(String(target).replace(',', '.')); saveField({ target: isNaN(v) ? null : v }); }} /></div>
+          <div className="mt"><label className="f">Note</label><textarea rows="3" value={note} onChange={e => setNote(e.target.value)} onBlur={() => note !== (trip.note || '') && saveField({ note })} /></div>
+          <div className="row mt" style={{ justifyContent: 'flex-end' }}>
+            <button className="btn ghost small" onClick={() => saveField({ archiviato: !trip.archiviato })}>{trip.archiviato ? 'Ripristina viaggio' : 'Archivia viaggio'}</button>
+            <button className="btn danger small" onClick={onDelete}>Elimina viaggio</button>
+          </div>
+        </div>
+      </details>
 
     </div>
   );
