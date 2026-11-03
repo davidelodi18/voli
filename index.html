@@ -191,7 +191,7 @@ details.more summary::-webkit-details-marker{display:none}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -540,9 +540,11 @@ function ItinCard({ o, d, sc, andata, ritorno, best, children }) {
 
 // ===== Itinerari completi andata + ritorno, con filtri (v1.5) =====
 const FKEY = 'voli_filtri_v1';
-const F0 = { stops: 'all', tA: 'any', tR: 'any', max: null, comodi: true, noSep: false, offO: [], offA: [] };
-const loadF = () => { try { return JSON.parse(localStorage.getItem(FKEY)) || {}; } catch (e) { return {}; } };
-const saveF = f => { try { localStorage.setItem(FKEY, JSON.stringify(f)); } catch (e) {} };
+const F0 = { stops: 'all', tA: [], tR: [], max: null, comodi: true, noSep: false, offO: [], offA: [] };
+const arrF = v => (Array.isArray(v) ? v : (!v || v === 'any') ? [] : [v]);
+const normF = f => ({ ...F0, ...f, tA: arrF(f && f.tA), tR: arrF(f && f.tR), offO: (f && f.offO) || [], offA: (f && f.offA) || [] });
+const loadF = id => { try { return JSON.parse(localStorage.getItem(FKEY + '_' + id)) || {}; } catch (e) { return {}; } };
+const saveF = (id, f) => { try { localStorage.setItem(FKEY + '_' + id, JSON.stringify(f)); } catch (e) {} };
 const slotOf = s => { const m = /^(\d{1,2}):/.exec(s || ''); if (!m) return null; const h = +m[1]; return h < 12 ? 'm' : h < 18 ? 'p' : 's'; };
 const carriersOf = f => (f && f.airline ? f.airline.split(/\s+e\s+|,\s*/).map(x => x.trim()).filter(Boolean) : []);
 const legOk = f => !f || f.ok !== false;
@@ -568,8 +570,8 @@ function passesF(it, f) {
   if (f.noSep && legs.some(l => l.sep)) return false;
   if (f.stops === 'direct' && legs.some(l => l.stops !== 0)) return false;
   if (f.stops === 'max1' && legs.some(l => l.stops > 1)) return false;
-  if (f.tA !== 'any' && slotOf(it.a.dep) !== f.tA) return false;
-  if (it.r && f.tR !== 'any' && slotOf(it.r.dep) !== f.tR) return false;
+  if (f.tA.length && !f.tA.includes(slotOf(it.a.dep))) return false;
+  if (it.r && f.tR.length && !f.tR.includes(slotOf(it.r.dep))) return false;
   if (f.max != null && it.pp > f.max) return false;
   if (f.offO.includes(f.byDest ? it.d : it.o)) return false;
   if (f.offA.length && legs.some(l => carriersOf(l).some(c => f.offA.includes(c)))) return false;
@@ -578,6 +580,10 @@ function passesF(it, f) {
 
 function FSeg({ value, onChange, opts }) {
   return <div className="seg fseg">{opts.map(([v, l]) => <button key={v} type="button" className={value === v ? 'act' : ''} onClick={() => onChange(v)}>{l}</button>)}</div>;
+}
+function FMulti({ value, onChange, opts }) {
+  const tog = v => { const nx = value.includes(v) ? value.filter(x => x !== v) : [...value, v]; onChange(nx.length === opts.length ? [] : nx); };
+  return <div className="seg fseg"><button type="button" className={value.length ? '' : 'act'} onClick={() => onChange([])}>Qualsiasi</button>{opts.map(([v, l]) => <button key={v} type="button" className={value.includes(v) ? 'act' : ''} onClick={() => tog(v)}>{l}</button>)}</div>;
 }
 function ItinLeg({ r, f, solo }) {
   return (
@@ -639,9 +645,9 @@ function RouteCard({ o, d, sc, list, tot, andata, ritorno, best, byDest }) {
   );
 }
 function TripOptions({ trip, combos }) {
-  const [f, setF] = useState(() => ({ ...F0, ...loadF() }));
-  const upd = p => setF(prev => { const nx = { ...prev, ...p }; saveF(nx); return nx; });
-  const reset = () => { saveF(F0); setF(F0); };
+  const [f, setF] = useState(() => normF(loadF(trip.id)));
+  const upd = p => setF(prev => { const nx = { ...prev, ...p }; saveF(trip.id, nx); return nx; });
+  const reset = () => { saveF(trip.id, F0); setF(F0); };
   const all = combos.map(x => ({ ...x, its: itinsOf(x.sc, x.o, x.d) }));
   const flat = all.flatMap(x => x.its);
   if (!flat.length) return null;
@@ -658,9 +664,9 @@ function TripOptions({ trip, combos }) {
   const shown = res.filter(x => x.list.length).sort((a, b) => a.list[0].pp - b.list[0].pp);
   const hidden = res.filter(x => x.its.length && !x.list.length);
   const nShown = res.reduce((s, x) => s + x.list.length, 0);
-  const nOn = (fx.stops !== 'all') + (fx.tA !== 'any') + (ar && fx.tR !== 'any') + (fx.max != null) + !!fx.noSep + (fx.offO.length > 0) + (fx.offA.length > 0) + !fx.comodi;
+  const nOn = (fx.stops !== 'all') + (fx.tA.length > 0) + (ar && fx.tR.length > 0) + (fx.max != null) + !!fx.noSep + (fx.offO.length > 0) + (fx.offA.length > 0) + !fx.comodi;
   const tog = (key, v) => upd({ [key]: f[key].includes(v) ? f[key].filter(x => x !== v) : [...f[key], v] });
-  const slots = [['any', 'Qualsiasi'], ['m', 'Mattina'], ['p', 'Pomeriggio'], ['s', 'Sera']];
+  const slots = [['m', 'Mattina'], ['p', 'Pomeriggio'], ['s', 'Sera']];
   return <>
     <div className="secttl">✈ Le tue opzioni · dalla più economica</div>
     <div className="card fbox">
@@ -678,13 +684,13 @@ function TripOptions({ trip, combos }) {
         <summary>Altri filtri: orari, aeroporti, compagnie ▾</summary>
         <div className="frow">
           <div className="flab">Partenza andata</div>
-          <FSeg value={fx.tA} onChange={v => upd({ tA: v })} opts={slots} />
+          <FMulti value={fx.tA} onChange={v => upd({ tA: v })} opts={slots} />
         </div>
         {ar && <div className="frow">
           <div className="flab">Partenza ritorno</div>
-          <FSeg value={fx.tR} onChange={v => upd({ tR: v })} opts={slots} />
+          <FMulti value={fx.tR} onChange={v => upd({ tR: v })} opts={slots} />
         </div>}
-        <div className="mut small" style={{ marginTop: 4 }}>Mattina prima delle 12 · pomeriggio 12–18 · sera dopo le 18</div>
+        <div className="mut small" style={{ marginTop: 4 }}>Puoi sceglierne più di una · mattina prima delle 12 · pomeriggio 12–18 · sera dopo le 18</div>
         {origins.length > 1 && <div className="frow">
           <div className="flab">{byDest ? 'Arrivo a' : 'Parto da'}</div>
           <div className="fchips">{origins.map(o => <button type="button" key={o} className={'fchip' + (f.offO.includes(o) ? '' : ' on')} onClick={() => tog('offO', o)}>{apName(o)}</button>)}</div>
@@ -1027,7 +1033,7 @@ function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRe
             <button className="btn full mt" onClick={onOpenSearch}>🔎 Cerca voli per questo viaggio</button>
           </div>
         );
-        return <TripOptions trip={trip} combos={combos} />;
+        return <TripOptions key={trip.id} trip={trip} combos={combos} />;
       })()}
 
       {st.ps.length > 0 && <>
