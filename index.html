@@ -178,6 +178,8 @@ html,body{overflow-x:clip}
 .fseg button{min-width:0}
 .frange{box-sizing:border-box;max-width:100%}
 details.more summary::-webkit-details-marker{display:none}
+.swapbtn{margin-left:10px;border:1px solid var(--teal2);background:#ccfbf1;color:var(--teal);border-radius:999px;padding:4px 11px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.swapbtn:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -189,7 +191,7 @@ details.more summary::-webkit-details-marker{display:none}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.6.0';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -569,7 +571,7 @@ function passesF(it, f) {
   if (f.tA !== 'any' && slotOf(it.a.dep) !== f.tA) return false;
   if (it.r && f.tR !== 'any' && slotOf(it.r.dep) !== f.tR) return false;
   if (f.max != null && it.pp > f.max) return false;
-  if (f.offO.includes(it.o)) return false;
+  if (f.offO.includes(f.byDest ? it.d : it.o)) return false;
   if (f.offA.length && legs.some(l => carriersOf(l).some(c => f.offA.includes(c)))) return false;
   return true;
 }
@@ -577,10 +579,10 @@ function passesF(it, f) {
 function FSeg({ value, onChange, opts }) {
   return <div className="seg fseg">{opts.map(([v, l]) => <button key={v} type="button" className={value === v ? 'act' : ''} onClick={() => onChange(v)}>{l}</button>)}</div>;
 }
-function ItinLeg({ r, f }) {
+function ItinLeg({ r, f, solo }) {
   return (
     <div className="ileg">
-      <span className={'itag' + (r ? ' r' : '')}>{r ? 'RITORNO' : 'ANDATA'}</span>
+      <span className={'itag' + (r ? ' r' : '')}>{r ? 'RITORNO' : solo ? 'VOLO' : 'ANDATA'}</span>
       <b>{f.dep}→{f.arr}</b>{f.night ? <sup>+1</sup> : null} <span className="mut small">{f.dur}</span>
       <div className="small">{f.airline} · <span className="mut">{stopTxt2(f)}{f.sep ? ' · biglietti separati' : ''}{f.change ? ' · cambio aeroporto' : ''}{f.ok === false ? ' · scomodo' : ''}</span></div>
     </div>
@@ -589,12 +591,12 @@ function ItinLeg({ r, f }) {
 function ItinRow({ it }) {
   return (
     <div className={'irow' + (legOk(it.a) && legOk(it.r) ? '' : ' ko')}>
-      <div className="irl"><ItinLeg f={it.a} />{it.r && <ItinLeg r f={it.r} />}</div>
+      <div className="irl"><ItinLeg f={it.a} solo={!it.r} />{it.r && <ItinLeg r f={it.r} />}</div>
       <div className="irp">{eur(it.pp)}</div>
     </div>
   );
 }
-function RouteCard({ o, d, sc, list, tot, andata, ritorno, best }) {
+function RouteCard({ o, d, sc, list, tot, andata, ritorno, best, byDest }) {
   const [n, setN] = useState(5);
   const top = list[0];
   const more = list.length - 1;
@@ -602,14 +604,14 @@ function RouteCard({ o, d, sc, list, tot, andata, ritorno, best }) {
     <div className={'card itin' + (best ? ' best' : '')}>
       <div className="ih">
         <div style={{ minWidth: 0 }}>
-          <div className="icity">da {apName(o)}</div>
-          <div className="icode">{o} → {d} · {apName(d)}</div>
+          <div className="icity">{byDest ? `per ${apName(d)}` : `da ${apName(o)}`}</div>
+          <div className="icode">{o} → {d} · {byDest ? 'da ' + apName(o) : apName(d)}</div>
         </div>
         <div><div className="iprice">{eur(top.pp)}</div><div className="iprice-s">a persona{top.r ? ' · A/R' : ''}</div></div>
       </div>
       {best && <span className="ibadge">💰 IL PIÙ CONVENIENTE</span>}
       <div className="lgblock">
-        <div className="lgh"><span className="lgtag">🛫 ANDATA</span><span>{fmtD(andata).toUpperCase()}</span></div>
+        <div className="lgh"><span className="lgtag">{top.r ? '🛫 ANDATA' : '🛫 VOLO'}</span><span>{fmtD(andata).toUpperCase()}</span></div>
         <LegLine f={top.a} from={o} to={d} />
         <div className="lgair">{top.a.airline}{top.a.sep ? <span> · biglietti separati</span> : null}</div>
       </div>
@@ -647,8 +649,11 @@ function TripOptions({ trip, combos }) {
   const prices = flat.map(i => i.pp);
   const pMin = Math.floor(Math.min(...prices)), pMax = Math.ceil(Math.max(...prices));
   const carriers = [...new Set(flat.flatMap(it => [...carriersOf(it.a), ...carriersOf(it.r)]))].sort();
-  const origins = [...new Set(all.map(x => x.o))];
-  const fx = { ...f, max: f.max != null && f.max < pMax ? Math.max(f.max, pMin) : null };
+  const origins0 = [...new Set(all.map(x => x.o))];
+  const dests0 = [...new Set(all.map(x => x.d))];
+  const byDest = origins0.length === 1 && dests0.length > 1;
+  const origins = byDest ? dests0 : origins0;
+  const fx = { ...f, byDest, max: f.max != null && f.max < pMax ? Math.max(f.max, pMin) : null };
   const res = all.map(x => ({ ...x, list: x.its.filter(it => passesF(it, fx)) }));
   const shown = res.filter(x => x.list.length).sort((a, b) => a.list[0].pp - b.list[0].pp);
   const hidden = res.filter(x => x.its.length && !x.list.length);
@@ -681,7 +686,7 @@ function TripOptions({ trip, combos }) {
         </div>}
         <div className="mut small" style={{ marginTop: 4 }}>Mattina prima delle 12 · pomeriggio 12–18 · sera dopo le 18</div>
         {origins.length > 1 && <div className="frow">
-          <div className="flab">Parto da</div>
+          <div className="flab">{byDest ? 'Arrivo a' : 'Parto da'}</div>
           <div className="fchips">{origins.map(o => <button type="button" key={o} className={'fchip' + (f.offO.includes(o) ? '' : ' on')} onClick={() => tog('offO', o)}>{apName(o)}</button>)}</div>
         </div>}
         {carriers.length > 1 && <div className="frow">
@@ -693,8 +698,8 @@ function TripOptions({ trip, combos }) {
       </details>
       {nOn > 0 && <button type="button" className="btn ghost full" style={{ marginTop: 8 }} onClick={reset}>Azzera filtri</button>}
     </div>
-    {shown.map((x, i) => <RouteCard key={x.o + x.d} o={x.o} d={x.d} sc={x.sc} list={x.list} tot={x.its.length} andata={trip.andata} ritorno={trip.ritorno} best={i === 0 && shown.length > 1} />)}
-    {hidden.length > 0 && <div className="card mut small">Con questi filtri non ci sono itinerari da {hidden.map(x => apName(x.o)).join(', ')}.</div>}
+    {shown.map((x, i) => <RouteCard key={x.o + x.d} o={x.o} d={x.d} sc={x.sc} list={x.list} tot={x.its.length} andata={trip.andata} ritorno={trip.ritorno} best={i === 0 && shown.length > 1} byDest={byDest} />)}
+    {hidden.length > 0 && <div className="card mut small">Con questi filtri non ci sono voli {byDest ? 'per' : 'da'} {hidden.map(x => apName(byDest ? x.d : x.o)).join(', ')}.</div>}
   </>;
 }
 
@@ -764,7 +769,7 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
           <div className="quick"><button onClick={() => up({ origini: data.impostazioni.origini })}>Usa i miei aeroporti: {data.impostazioni.origini.join(', ')}</button></div>}
         <div className="mt">
           <div className="row" style={{ marginBottom: 4 }}>
-            <label className="f" style={{ margin: 0 }}>A</label><div className="sp" />
+            <label className="f" style={{ margin: 0 }}>A</label><button type="button" className="swapbtn" disabled={s.ovunque || (!s.origini.length && !s.destinazioni.length)} onClick={() => up({ origini: s.destinazioni, destinazioni: s.origini })} title="Inverti partenza e arrivo">⇅ Inverti Da / A</button><div className="sp" />
             <label className="chk small"><input type="checkbox" checked={s.ovunque} onChange={e => up({ ovunque: e.target.checked })} /> Ovunque</label>
           </div>
           {!s.ovunque ? <AirportPicker value={s.destinazioni} onChange={v => up({ destinazioni: v })} placeholder="Es. SVQ, Siviglia…" />
