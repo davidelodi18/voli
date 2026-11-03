@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f766e">
@@ -173,6 +173,11 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 .itag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;padding:1px 6px;border-radius:5px;background:#ccfbf1;color:var(--teal);margin-right:6px;vertical-align:1px}
 .itag.r{background:#e0e7ff;color:#4338ca}
 .irp{font-weight:800;color:var(--teal);white-space:nowrap;font-size:17px}
+html,body{overflow-x:clip}
+.card,.fbox,.frow,.irow,.irl,.ileg,.lgblock,.ifoot{min-width:0;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+.fseg button{min-width:0}
+.frange{box-sizing:border-box;max-width:100%}
+details.more summary::-webkit-details-marker{display:none}
 </style>
 </head>
 <body>
@@ -184,7 +189,7 @@ pre.code{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:10px;font-s
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
