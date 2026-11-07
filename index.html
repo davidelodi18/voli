@@ -191,7 +191,7 @@ details.more summary::-webkit-details-marker{display:none}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script type="text/babel" data-presets="react">
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.7.0';
 const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============ CONFIG FIREBASE ============
@@ -816,7 +816,7 @@ function SearchTab({ search, setSearch, data, onSaveTrip, onRegister, onNew, onO
         <div className="card howto">
           <div className="row" style={{ marginBottom: 8 }}><b>Come funziona</b><div className="sp" /><button className="xbtn" onClick={hideHow} aria-label="Chiudi">×</button></div>
           <HowSteps />
-          <div className="mut small" style={{ marginTop: 10 }}>🤖 Per i viaggi salvati, ogni sera alle 19:35 Claude legge Google Flights e Skyscanner dal tuo Chrome e registra prezzi e voli trovati in automatico. Puoi sempre aggiungere tu un prezzo.</div>
+          <div className="mut small" style={{ marginTop: 10 }}>🤖 Quando vuoi i prezzi aggiornati in automatico, salva il viaggio, aprilo in Viaggi e tocca "Aggiorna prezzi con Claude". Puoi sempre aggiungere tu un prezzo.</div>
         </div>
       )}
 
@@ -951,7 +951,48 @@ function PriceChart({ ps, target }) {
   );
 }
 
-function TripsTab({ data, onOpen, onSearch, onRegister }) {
+const CLAUDE_PROMPT = "Aggiorna i prezzi dei voli nell'app \"Voli\" di Davide (https://davidelodi18.github.io/voli/). {{FILTRO}} Obiettivo: registrare nell'app, per ogni tratta, tutti gli itinerari completi andata + ritorno (ogni combinazione con il suo prezzo totale) e l'itinerario completo più conveniente, senza che Davide inserisca prezzi a mano. Scrivi tutto in italiano.\n\nStrumenti: usa Claude in Chrome (strumenti mcp__claude-in-chrome__*, caricali con ToolSearch in una sola chiamata, includendo javascript_tool, find e browser_batch). Se Chrome o l'estensione non sono raggiungibili, dillo e fermati. Apri sempre una tua scheda nuova e chiudila alla fine. Non accettare banner cookie, non fare login, non risolvere captcha: se un sito chiede una verifica, salta quel sito e segnalalo.\nRegole pratiche per javascript_tool: l'output viene troncato oltre ~1000 caratteri e viene BLOCCATO se contiene URL o testo tipo query string: non restituire mai URL; restituisci solo righe compatte con campi separati da ~. Le variabili window.* si perdono a ogni navigazione. Ogni chiamata deve durare al massimo ~35 s (al massimo 3 click+attese per chiamata). Per navigare a un URL che non puoi leggere, impostalo con `setTimeout(()=>{location.href=URL},100)` da una pagina che lo conosce.\n\n1) Leggi i viaggi. Apri https://davidelodi18.github.io/voli/ , attendi 5 secondi e, con javascript_tool nella pagina dell'app, leggi `(await firebase.database().ref('voli').get()).val()`. Considera solo i viaggi indicati sopra, con archiviato != true, ovunque != true, andata >= oggi e destinazioni non vuote. Le tratte sono tutte le coppie origine (origini[]) × destinazione (destinazioni[]) con origine != destinazione. Andata e ritorno se tipo === 'ar' e ritorno valorizzato. Se non ci sono viaggi validi, dillo in una riga e termina.\n\n2) Link. Nella pagina dell'app, per ogni tratta, usa la funzione globale `buildLinks({adulti: t.adulti||1, tipo: t.tipo, andata: t.andata, ritorno: t.ritorno, flex: 0}, origine, destinazione)`: l'elemento con k === 'gf' è l'URL di Google Flights, quello con k === 'sky' l'URL di Skyscanner. Salva l'elenco {tripId, o, d, gf, sky} in localStorage['_scanRoutes'] della pagina dell'app (non restituirlo).\n\n3) Google Flights, andata. Per ogni tratta, dalla pagina dell'app naviga all'URL gf, poi con javascript_tool attendi 5 s, definisci le funzioni di estrazione e clicca l'elemento [role=tab] il cui testo contiene \"Più economico\", attendi 4 s. Raccogli (senza duplicati) gli aria-label che contengono \"prezzo totale\" e \"Partenza da\" (salvali in window._andLabels). Per ogni label estrai: total (numero in \"di N euro\", togliendo i punti delle migliaia), stops (0 se contiene \"diretto\" o \"senza scali\", altrimenti N in \"con N scal\"), airline (testo dopo \"scalo con\"/\"scali con\"/\"diretto con\"/\"senza scali con\" fino al punto), dep e arr (prime due occorrenze \"alle ore HH:MM\"), dur (\"Durata totale ...\" fino al punto; formato tipo \"4 h 35 min\"), via (città dopo \"nella città di\"; se assenti, dopo \"presso Aeroporto di\"; separate da virgola), change (contiene \"Effettua qui il cambio\"), sep (contiene \"Biglietti separati\"), night (le due date \"il giorno <giorno>, <mese> <N>\" di partenza e arrivo sono diverse). Durata in minuti = ore (numero prima di \" h\") × 60 + minuti. ok = stops ≤ 1 e durata ≤ 720 min e change = false e night = false. Ordina per total, deduplica per total+airline+dep+arr, tieni i primi 10 = lista andata (window._and, con la label). Assicurati che tutti i voli diretti di andata presenti nella pagina siano nella lista anche se oltre i primi 10 (al massimo 14 voli in totale).\n\n4) Google Flights, tutte le combinazioni (solo per andata e ritorno). Per OGNI volo i della lista andata: clicca l'elemento il cui aria-label è esattamente la label di quel volo, attendi 6 s, raccogli gli aria-label con \"prezzo totale\" e \"Partenza da\" esclusi quelli in window._andLabels: sono i ritorni possibili con quell'andata, con total = prezzo totale andata+ritorno di quella combinazione. Estrai gli stessi campi e ok, ordina per total, deduplica e tienili TUTTI (al massimo 15) in window._combo[i]. Poi `history.back()` e attendi 4,5 s; se nessuna delle label di window._andLabels è più visibile, riclicca il tab \"Più economico\" e attendi 4 s. Fai al massimo 3 voli per chiamata javascript_tool. Se un'andata dà \"elemento non trovato\" o la pagina resta sui ritorni, torna indietro e riprova una volta.\nPassaggio dei dati all'app: quando hai finito la tratta, nella pagina di Google costruisci pkg = {k:'ORIG-DEST', and:[lista andata senza label], combo:[{ai:i, r:[ritorni senza label]}]} e naviga a 'https://davidelodi18.github.io/voli/#scanpkg=' + encodeURIComponent(JSON.stringify(pkg)). Nella pagina dell'app leggi location.hash, salva il JSON in localStorage['_pkg_'+k], pulisci l'hash con history.replaceState e prosegui con la tratta successiva (URL da localStorage['_scanRoutes']). Per la sola andata il pkg ha combo vuoto.\n\n5) Skyscanner (controllo secondario). Per ogni tratta, dalla pagina dell'app naviga all'URL sky (da localStorage), attendi 10 s, leggi da document.body.innerText (sostituendo prima i caratteri \\u00a0 e \\u202f con spazi) i numeri dopo \"Il più economico €\" e \"Il migliore €\". Se non li trovi o c'è una verifica/captcha, sky = null. Torna all'app e salva sky in localStorage['_sky_'+k].\n\n6) Registra nell'app. Nella pagina dell'app, con un unico `firebase.database().ref('voli').update({...})` scrivi per ogni tratta (prezzi pp a persona = total / adulti, 2 decimali; ogni volo è { pp, airline, stops, dep, arr, dur, via, change, sep, night, ok }):\n - voli = lista andata; combo = per ogni andata i e ogni suo ritorno r: { a: voli[i], r: volo ritorno, pp: total del ritorno / adulti }, ordinata per pp;\n - best = la combinazione più economica con a.ok e r.ok (per la sola andata: il volo andata più economico con ok); sel = best.a; ritorni = i ritorni dell'andata sel.\n a) `scan/<tripId>/<ORIGINE>-<DESTINAZIONE>` (sovrascrive il precedente) = { ts: Date.now(), fonte: 'Google Flights', andata, ritorno ('' se sola andata), adulti, url: URL gf, sky: {cheap, best} oppure null, voli, sel, ritorni, combo };\n b) `prezzi/<id>` (id = Date.now().toString(36) + suffisso univoco) = { id, tripId, origine, destinazione, andata, ritorno, adulti, pp: best.pp, tot: pp*adulti, fonte: 'Google Flights', compagnia: compagnia andata (+ ' / ' + compagnia ritorno se diversa), scali: 'Diretto' se entrambi diretti altrimenti '1 scalo', orari: 'andata HH:MM–HH:MM (diretto | 1 scalo a X) · ritorno HH:MM–HH:MM (...)', bagaglio: 'Solo zaino', note: '🤖 Itinerario completo più conveniente e comodo · Skyscanner: più economico X €, migliore Y €' (+ ' · Google minimo assoluto Z € ma con voli scomodi' se la combinazione più economica in assoluto costa meno di best), link: URL gf, ts: Date.now(), auto: true }.\n Poi rileggi `voli/scan` e `voli/prezzi` e verifica che i dati nuovi ci siano. Infine rimuovi da localStorage le chiavi _scanRoutes, _pkg_* e _sky_*.\n\n7) Resoconto. Per ogni viaggio confronta il nuovo prezzo principale di ogni tratta con la rilevazione precedente della stessa tratta e stesse date (campo pp di prezzi). Chiudi con un resoconto breve: per ogni viaggio l'itinerario più conveniente di oggi (andata e ritorno con compagnia e orari), quante combinazioni sono state raccolte e quante con voli diretti sia all'andata sia al ritorno, e le variazioni rispetto all'ultima rilevazione (▲/▼ in €). Metti in evidenza se una tratta è scesa di almeno il 10% o sotto il prezzo obiettivo del viaggio (campo target, a persona).";
+const claudePromptFor = trips => {
+  const list = (Array.isArray(trips) ? trips : [trips]).filter(Boolean);
+  const filtro = list.length === 1
+    ? `Aggiorna SOLO il viaggio con id "${list[0].id}" (${list[0].nome}).`
+    : `Aggiorna questi viaggi: ${list.map(t => `"${t.id}" (${t.nome})`).join(', ')}.`;
+  return CLAUDE_PROMPT.replace('{{FILTRO}}', filtro);
+};
+function ClaudeModal({ trips, onClose }) {
+  const text = claudePromptFor(trips);
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
+    if (!ok) { try { const ta = document.getElementById('claude-prompt'); ta.select(); ok = document.execCommand('copy'); } catch (e) {} }
+    setCopied(ok);
+    return ok;
+  };
+  const list = (Array.isArray(trips) ? trips : [trips]).filter(Boolean);
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h2>🤖 Aggiorna prezzi con Claude</h2>
+        <div className="mut small" style={{ marginBottom: 10 }}>{list.length === 1 ? list[0].nome : `${list.length} viaggi attivi`}</div>
+        <div className="steps">
+          <div className="step"><span className="n">1</span><span>Tocca <b>Copia richiesta e apri Claude</b>.</span></div>
+          <div className="step"><span className="n">2</span><span>In una nuova chat <b>incolla</b> il testo e invia. Serve il Mac acceso con Chrome aperto.</span></div>
+          <div className="step"><span className="n">3</span><span>In qualche minuto Claude legge Google Flights e Skyscanner e aggiorna voli e prezzi qui nell'app.</span></div>
+        </div>
+        <button className="btn full mt" onClick={async () => { await copy(); window.open('https://claude.ai/new', '_blank'); }}>📋 Copia richiesta e apri Claude</button>
+        <button className="btn ghost full" style={{ marginTop: 8 }} onClick={copy}>{copied ? '✓ Copiata' : 'Copia solo la richiesta'}</button>
+        <details className="more" style={{ marginTop: 8 }}><summary>Vedi il testo della richiesta ▾</summary>
+          <textarea id="claude-prompt" readOnly rows="8" value={text} style={{ fontSize: 12, marginTop: 6 }} onFocus={e => e.target.select()} />
+        </details>
+        <div className="mut small" style={{ marginTop: 8 }}>In alternativa, nella chat dove abbiamo creato l'app basta scrivere "aggiorna i prezzi".</div>
+        <button className="btn ghost full" style={{ marginTop: 10 }} onClick={onClose}>Chiudi</button>
+      </div>
+    </div>
+  );
+}
+
+function TripsTab({ data, onOpen, onSearch, onRegister, onAskClaude }) {
   const [arch, setArch] = useState(false);
   const prezzi = Object.values(data.prezzi || {});
   const trips = Object.values(data.viaggi || {}).filter(t => !!t.archiviato === arch).sort((a, b) => (a.andata || '9').localeCompare(b.andata || '9'));
@@ -959,6 +1000,8 @@ function TripsTab({ data, onOpen, onSearch, onRegister }) {
     <div>
       <div className="row" style={{ marginBottom: 12 }}>
         <div className="seg"><button className={!arch ? 'act' : ''} onClick={() => setArch(false)}>Attivi</button><button className={arch ? 'act' : ''} onClick={() => setArch(true)}>Archiviati</button></div>
+        <div className="sp" />
+        {!arch && trips.filter(t => !t.ovunque && (daysTo(t.andata) ?? 0) >= 0).length > 0 && <button className="btn small" style={{ background: '#7c3aed' }} onClick={() => onAskClaude(trips.filter(t => !t.ovunque && (daysTo(t.andata) ?? 0) >= 0))}>🤖 Aggiorna tutti</button>}
       </div>
       {!trips.length && <div className="card empty">{arch ? 'Nessun viaggio archiviato.' : 'Nessun viaggio salvato. Crea una ricerca e premi "Salva viaggio".'}</div>}
       {trips.map(t => {
@@ -996,7 +1039,7 @@ function TripsTab({ data, onOpen, onSearch, onRegister }) {
   );
 }
 
-function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRegister, onDelete }) {
+function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRegister, onDelete, onAskClaude }) {
   const prezzi = Object.values(data.prezzi || {});
   const st = tripStats(trip.id, prezzi);
   const [nome, setNome] = useState(trip.nome); const [target, setTarget] = useState(trip.target || ''); const [note, setNote] = useState(trip.note || '');
@@ -1022,6 +1065,7 @@ function TripDetail({ trip, data, store, onBack, onOpenSearch, onEditPrice, onRe
           <button className="btn" onClick={onOpenSearch}>🔎 Cerca voli</button>
           <button className="btn sec" onClick={() => onRegister()}>+ Prezzo a mano</button>
         </div>
+        <button className="btn full" style={{ marginTop: 8, background: '#7c3aed' }} onClick={() => onAskClaude([trip])}>🤖 Aggiorna prezzi con Claude</button>
       </div>
 
       {(() => {
@@ -1144,6 +1188,7 @@ function App() {
   const [tripView, setTripView] = useState(null);
   const [search, setSearch] = useState(blankSearch());
   const [draft, setDraft] = useState(null);
+  const [ask, setAsk] = useState(null);
   const [newVer, setNewVer] = useState(null);
   const [toast, setToast] = useState(null);
   const toastT = useRef(null);
@@ -1211,8 +1256,8 @@ function App() {
       </header>
       <main>
         {tab === 'cerca' && <SearchTab search={search} setSearch={setSearch} data={data} onSaveTrip={saveTrip} onRegister={register} onNew={() => setSearch(blankSearch(data.impostazioni))} onOpenTrip={goTrip} />}
-        {tab === 'viaggi' && !trip && <TripsTab data={data} onOpen={goTrip} onSearch={openSearchFromTrip} onRegister={registerFor} />}
-        {tab === 'viaggi' && trip && <TripDetail trip={trip} data={data} store={store} onBack={() => setTripView(null)} onOpenSearch={() => openSearchFromTrip(trip)}
+        {tab === 'viaggi' && !trip && <TripsTab data={data} onOpen={goTrip} onSearch={openSearchFromTrip} onRegister={registerFor} onAskClaude={setAsk} />}
+        {tab === 'viaggi' && trip && <TripDetail trip={trip} data={data} store={store} onAskClaude={setAsk} onBack={() => setTripView(null)} onOpenSearch={() => openSearchFromTrip(trip)}
           onEditPrice={p => setDraft(p)} onDelete={() => deleteTrip(trip)}
           onRegister={() => registerFor(trip)} />}
         {tab === 'imp' && <SettingsTab data={data} store={store} onCheckUpdate={v => setNewVer(v)} />}
@@ -1225,6 +1270,7 @@ function App() {
       </div></nav>
       {toast && <div className="toast"><span>{toast.msg}</span>{toast.action && <button onClick={() => { toast.action.fn(); setToast(null); }}>{toast.action.label}</button>}</div>}
       {draft && <PriceModal draft={draft} onClose={() => setDraft(null)} onSave={savePrice} />}
+      {ask && <ClaudeModal trips={ask} onClose={() => setAsk(null)} />}
       {newVer && (
         <div className="modal-bg pop">
           <div className="modal">
